@@ -71,7 +71,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 20.r,
                       offset: Offset(0, 10.h),
                     ),
@@ -140,7 +140,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   )
                   .fadeIn(duration: 500.ms, delay: 700.ms),
 
-              const SizedBox(height: AppSpacing.xxl),
+              SizedBox(height: AppSpacing.xxl),
 
               // Version Number
               Text(

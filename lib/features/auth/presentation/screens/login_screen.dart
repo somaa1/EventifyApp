@@ -95,6 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 padding: EdgeInsets.all(AppSpacing.xl),
                 child: Form(
                   key: _formKey,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
