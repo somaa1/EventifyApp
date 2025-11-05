@@ -51,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return null;
   }
 
-  void _handleLogin() {
+  void _handleLogin(BuildContext context) {
     if (_formKey.currentState!.validate()) {
       context.read<AuthBloc>().add(
             LoginRequested(
@@ -71,14 +71,20 @@ class _LoginScreenState extends State<LoginScreen> {
           child: BlocConsumer<AuthBloc, AuthState>(
             listener: (context, state) {
               if (state is AuthAuthenticated) {
-                // TODO: Navigate to home screen
+                // Show success message
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Login successful!'),
                     backgroundColor: AppColors.success,
+                    duration: Duration(seconds: 1),
                   ),
                 );
-                // context.go(AppRouter.home); // Will add this when home is created
+                // Navigate to home screen
+                Future.delayed(const Duration(milliseconds: 500), () {
+                  if (context.mounted) {
+                    context.go(AppRouter.home);
+                  }
+                });
               } else if (state is AuthError) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -188,7 +194,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       LoadingButton(
                         text: 'Login',
                         isLoading: isLoading,
-                        onPressed: _handleLogin,
+                        onPressed: () => _handleLogin(context),
                       )
                           .animate()
                           .fadeIn(duration: 600.ms, delay: 500.ms)

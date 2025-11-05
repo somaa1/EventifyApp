@@ -7,6 +7,7 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/otp_verification_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
+import '../../features/home/presentation/screens/home_screen.dart';
 import '../constants/app_constants.dart';
 
 class AppRouter {
@@ -147,7 +148,20 @@ class AppRouter {
           },
         ),
       ),
-      // TODO: Add home route when home screen is created
+      GoRoute(
+        path: home,
+        name: 'home',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const HomeScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: animation,
+              child: child,
+            );
+          },
+        ),
+      ),
     ],
   );
 

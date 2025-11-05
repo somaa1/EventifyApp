@@ -35,9 +35,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (isAuthenticated) {
       // User is logged in, navigate to home
-      // TODO: Navigate to home screen when it's created
       if (!mounted) return;
-      context.go(AppRouter.login); // Temporary - will change to home
+      context.go(AppRouter.home);
     } else {
       // User is not logged in, check if first launch
       final isFirstLaunch = await AppRouter.isFirstLaunch();

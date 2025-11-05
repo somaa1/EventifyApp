@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/di/injection.dart';
 import '../bloc/auth_bloc.dart';
 import '../widgets/otp_input_field.dart';
@@ -53,7 +54,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     });
   }
 
-  void _handleVerifyOtp() {
+  void _handleVerifyOtp(BuildContext context) {
     if (_otp.length == 6) {
       context.read<AuthBloc>().add(
             VerifyOtpRequested(
@@ -64,7 +65,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     }
   }
 
-  void _handleResendOtp() {
+  void _handleResendOtp(BuildContext context) {
     context.read<AuthBloc>().add(
           ResendOtpRequested(email: widget.email),
         );
@@ -86,15 +87,20 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           child: BlocConsumer<AuthBloc, AuthState>(
             listener: (context, state) {
               if (state is AuthAuthenticated) {
-                // TODO: Navigate to home screen
+                // Show success message
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Verification successful!'),
                     backgroundColor: AppColors.success,
+                    duration: Duration(seconds: 1),
                   ),
                 );
-                // Navigate to home when implemented
-                // context.go(AppRouter.home);
+                // Navigate to home screen
+                Future.delayed(const Duration(milliseconds: 500), () {
+                  if (context.mounted) {
+                    context.go(AppRouter.home);
+                  }
+                });
               } else if (state is AuthOtpResent) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -204,7 +210,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           .fadeIn(duration: 600.ms, delay: 600.ms)
                     else
                       TextButton(
-                        onPressed: _handleResendOtp,
+                        onPressed: () => _handleResendOtp(context),
                         child: const Text('Resend Code'),
                       )
                           .animate()
@@ -216,7 +222,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     LoadingButton(
                       text: 'Verify',
                       isLoading: isLoading,
-                      onPressed: _otp.length == 6 ? _handleVerifyOtp : null,
+                      onPressed: _otp.length == 6 ? () => _handleVerifyOtp(context) : null,
                     )
                         .animate()
                         .fadeIn(duration: 600.ms, delay: 700.ms)

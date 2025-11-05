@@ -75,7 +75,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return null;
   }
 
-  void _handleRegister() {
+  void _handleRegister(BuildContext context) {
     if (_formKey.currentState!.validate()) {
       context.read<AuthBloc>().add(
             RegisterRequested(
@@ -262,7 +262,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       LoadingButton(
                         text: 'Create Account',
                         isLoading: isLoading,
-                        onPressed: _handleRegister,
+                        onPressed: () => _handleRegister(context),
                       )
                           .animate()
                           .fadeIn(duration: 600.ms, delay: 700.ms)
