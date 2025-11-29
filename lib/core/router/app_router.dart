@@ -8,6 +8,11 @@ import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/otp_verification_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
+import '../../features/home/presentation/screens/events_screen.dart';
+import '../../features/home/presentation/screens/event_details_screen.dart';
+import '../../features/home/presentation/screens/my_events_screen.dart';
+import '../../features/home/presentation/screens/calendar_screen.dart';
+import '../../features/registration/presentation/screens/qr_ticket_screen.dart';
 import '../constants/app_constants.dart';
 
 class AppRouter {
@@ -18,6 +23,11 @@ class AppRouter {
   static const String otpVerification = '/otp-verification';
   static const String forgotPassword = '/forgot-password';
   static const String home = '/home';
+  static const String events = '/events';
+  static const String eventDetails = '/events/:id';
+  static const String myEvents = '/my-events';
+  static const String calendar = '/calendar';
+  static const String ticket = '/ticket/:token';
 
   static GoRouter router = GoRouter(
     initialLocation: splash,
@@ -161,6 +171,127 @@ class AppRouter {
             );
           },
         ),
+      ),
+      GoRoute(
+        path: events,
+        name: 'events',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const EventsScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(1.0, 0.0),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeInOut,
+              )),
+              child: FadeTransition(
+                opacity: animation,
+                child: child,
+              ),
+            );
+          },
+        ),
+      ),
+      GoRoute(
+        path: eventDetails,
+        name: 'event-details',
+        pageBuilder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: EventDetailsScreen(eventId: id),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(1.0, 0.0),
+                  end: Offset.zero,
+                ).animate(CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeInOut,
+                )),
+                child: FadeTransition(
+                  opacity: animation,
+                  child: child,
+                ),
+              );
+            },
+          );
+        },
+      ),
+      GoRoute(
+        path: myEvents,
+        name: 'my-events',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const MyEventsScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(1.0, 0.0),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeInOut,
+              )),
+              child: FadeTransition(
+                opacity: animation,
+                child: child,
+              ),
+            );
+          },
+        ),
+      ),
+      GoRoute(
+        path: calendar,
+        name: 'calendar',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const CalendarScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(1.0, 0.0),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeInOut,
+              )),
+              child: FadeTransition(
+                opacity: animation,
+                child: child,
+              ),
+            );
+          },
+        ),
+      ),
+      GoRoute(
+        path: ticket,
+        name: 'ticket',
+        pageBuilder: (context, state) {
+          final token = state.pathParameters['token'] ?? '';
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: QrTicketScreen(registrationToken: token),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0.0, 1.0),
+                  end: Offset.zero,
+                ).animate(CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeInOut,
+                )),
+                child: FadeTransition(
+                  opacity: animation,
+                  child: child,
+                ),
+              );
+            },
+          );
+        },
       ),
     ],
   );

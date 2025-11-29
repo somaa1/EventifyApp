@@ -15,6 +15,36 @@ import '../../features/auth/domain/usecases/resend_otp_usecase.dart';
 import '../../features/auth/domain/usecases/check_auth_usecase.dart';
 import '../../features/auth/domain/usecases/logout_usecase.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/home/data/datasources/event_api_client.dart';
+import '../../features/home/data/datasources/user_api_client.dart';
+import '../../features/home/data/repositories/event_repository_impl.dart';
+import '../../features/home/data/repositories/user_repository_impl.dart';
+import '../../features/home/domain/repositories/event_repository.dart';
+import '../../features/home/domain/repositories/user_repository.dart';
+import '../../features/home/domain/usecases/get_events_usecase.dart';
+import '../../features/home/domain/usecases/get_user_stats_usecase.dart';
+import '../../features/home/domain/usecases/get_event_details_usecase.dart';
+import '../../features/home/domain/usecases/get_registered_events_usecase.dart';
+import '../../features/home/presentation/cubit/home_cubit.dart';
+import '../../features/home/presentation/cubit/events_cubit.dart';
+import '../../features/home/presentation/cubit/event_details_cubit.dart';
+import '../../features/home/presentation/cubit/my_events_cubit.dart';
+import '../../features/home/presentation/cubit/calendar_cubit.dart';
+import '../../features/registration/data/datasources/registration_api_client.dart';
+import '../../features/registration/data/repositories/registration_repository_impl.dart';
+import '../../features/registration/domain/repositories/registration_repository.dart';
+import '../../features/registration/domain/usecases/register_for_event_usecase.dart';
+import '../../features/registration/domain/usecases/get_registration_by_token_usecase.dart';
+import '../../features/registration/presentation/cubit/registration_cubit.dart';
+import '../../features/registration/presentation/cubit/ticket_cubit.dart';
+import '../../features/attendance/data/datasources/attendance_api_client.dart';
+import '../../features/attendance/data/repositories/attendance_repository_impl.dart';
+import '../../features/attendance/domain/repositories/attendance_repository.dart';
+import '../../features/attendance/domain/usecases/confirm_attendance_usecase.dart';
+import '../../features/invitations/data/datasources/invitation_api_client.dart';
+import '../../features/invitations/data/repositories/invitation_repository_impl.dart';
+import '../../features/invitations/domain/repositories/invitation_repository.dart';
+import '../../features/invitations/domain/usecases/send_invitation_usecase.dart';
 
 final getIt = GetIt.instance;
 
@@ -65,6 +95,18 @@ Future<void> initializeDependencies() async {
 
   // Auth Feature
   _registerAuthDependencies();
+
+  // Home Feature
+  _registerHomeDependencies();
+
+  // Registration Feature
+  _registerRegistrationDependencies();
+
+  // Attendance Feature
+  _registerAttendanceDependencies();
+
+  // Invitation Feature
+  _registerInvitationDependencies();
 }
 
 void _registerAuthDependencies() {
@@ -106,5 +148,143 @@ void _registerAuthDependencies() {
       checkAuthUseCase: getIt<CheckAuthUseCase>(),
       logoutUseCase: getIt<LogoutUseCase>(),
     ),
+  );
+}
+
+void _registerHomeDependencies() {
+  // Data Sources
+  getIt.registerLazySingleton<EventApiClient>(
+    () => EventApiClient(getIt<Dio>()),
+  );
+
+  getIt.registerLazySingleton<UserApiClient>(
+    () => UserApiClient(getIt<Dio>()),
+  );
+
+  // Repositories
+  getIt.registerLazySingleton<EventRepository>(
+    () => EventRepositoryImpl(getIt<EventApiClient>()),
+  );
+
+  getIt.registerLazySingleton<UserRepository>(
+    () => UserRepositoryImpl(getIt<UserApiClient>()),
+  );
+
+  // Use Cases
+  getIt.registerLazySingleton(
+    () => GetEventsUseCase(getIt<EventRepository>()),
+  );
+
+  getIt.registerLazySingleton(
+    () => GetUserStatsUseCase(getIt<UserRepository>()),
+  );
+
+  getIt.registerLazySingleton(
+    () => GetEventDetailsUseCase(getIt<EventRepository>()),
+  );
+
+  getIt.registerLazySingleton(
+    () => GetRegisteredEventsUseCase(getIt<EventRepository>()),
+  );
+
+  // Cubits
+  getIt.registerFactory(
+    () => HomeCubit(
+      getUserStatsUseCase: getIt<GetUserStatsUseCase>(),
+      authRepository: getIt<AuthRepository>(),
+    ),
+  );
+
+  getIt.registerFactory(
+    () => EventsCubit(
+      getEventsUseCase: getIt<GetEventsUseCase>(),
+    ),
+  );
+
+  getIt.registerFactory(
+    () => EventDetailsCubit(
+      getEventDetailsUseCase: getIt<GetEventDetailsUseCase>(),
+    ),
+  );
+
+  getIt.registerFactory(
+    () => MyEventsCubit(
+      getRegisteredEventsUseCase: getIt<GetRegisteredEventsUseCase>(),
+    ),
+  );
+
+  getIt.registerFactory(
+    () => CalendarCubit(
+      getEventsUseCase: getIt<GetEventsUseCase>(),
+    ),
+  );
+}
+
+void _registerRegistrationDependencies() {
+  // Data Sources
+  getIt.registerLazySingleton<RegistrationApiClient>(
+    () => RegistrationApiClient(getIt<Dio>()),
+  );
+
+  // Repository
+  getIt.registerLazySingleton<RegistrationRepository>(
+    () => RegistrationRepositoryImpl(getIt<RegistrationApiClient>()),
+  );
+
+  // Use Cases
+  getIt.registerLazySingleton(
+    () => RegisterForEventUseCase(getIt<RegistrationRepository>()),
+  );
+
+  getIt.registerLazySingleton(
+    () => GetRegistrationByTokenUseCase(getIt<RegistrationRepository>()),
+  );
+
+  // Cubits
+  getIt.registerFactory(
+    () => RegistrationCubit(
+      registerForEventUseCase: getIt<RegisterForEventUseCase>(),
+    ),
+  );
+
+  getIt.registerFactory(
+    () => TicketCubit(
+      getRegistrationByTokenUseCase: getIt<GetRegistrationByTokenUseCase>(),
+      getEventDetailsUseCase: getIt<GetEventDetailsUseCase>(),
+    ),
+  );
+}
+
+void _registerAttendanceDependencies() {
+  // Data Sources
+  getIt.registerLazySingleton<AttendanceApiClient>(
+    () => AttendanceApiClient(getIt<Dio>()),
+  );
+
+  // Repository
+  getIt.registerLazySingleton<AttendanceRepository>(
+    () => AttendanceRepositoryImpl(getIt<AttendanceApiClient>()),
+  );
+
+  // Use Cases
+  getIt.registerLazySingleton(
+    () => ConfirmAttendanceUseCase(getIt<AttendanceRepository>()),
+  );
+}
+
+void _registerInvitationDependencies() {
+  // Data Sources
+  getIt.registerLazySingleton<InvitationApiClient>(
+    () => InvitationApiClient(getIt<Dio>()),
+  );
+
+  // Repository
+  getIt.registerLazySingleton<InvitationRepository>(
+    () => InvitationRepositoryImpl(getIt<InvitationApiClient>()),
+  );
+
+  // Use Cases
+  getIt.registerLazySingleton(
+    () => SendInvitationUseCase(getIt<InvitationRepository>()),
   );
 }

@@ -32,6 +32,7 @@ class AppColors {
 
   // Border & Divider Colors
   static const Color border = Color(0xFFE5E7EB); // Gray 200
+  static const Color borderColor = Color(0xFFE5E7EB); // Gray 200 (alias for border)
   static const Color divider = Color(0xFFE5E7EB); // Gray 200
 
   // Gradient Colors

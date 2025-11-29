@@ -133,4 +133,12 @@ class AppTextStyles {
     height: 1.6,
     letterSpacing: 1.5,
   );
+
+  // Convenient aliases for common use cases
+  static TextStyle get headingLarge => textTheme.headlineLarge!;
+  static TextStyle get headingMedium => textTheme.headlineMedium!;
+  static TextStyle get headingSmall => textTheme.headlineSmall!;
+  static TextStyle get bodyLarge => textTheme.bodyLarge!;
+  static TextStyle get bodyMedium => textTheme.bodyMedium!;
+  static TextStyle get bodySmall => textTheme.bodySmall!;
 }
