@@ -4,6 +4,8 @@ import '../../../../core/errors/failures.dart';
 import '../../domain/entities/user_stats.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../datasources/user_api_client.dart';
+import '../../../profile/domain/entities/user_profile.dart';
+import '../models/user_response.dart';
 
 /// Implementation of UserRepository
 class UserRepositoryImpl implements UserRepository {
@@ -17,6 +19,10 @@ class UserRepositoryImpl implements UserRepository {
       final statsModel = await _apiClient.getUserStats();
       return Right(statsModel.toEntity());
     } on DioException catch (e) {
+      // If backend stats endpoint is temporarily failing, fall back to empty stats
+      if (e.response?.statusCode == 500) {
+        return const Right(UserStats.empty);
+      }
       return Left(_handleDioError(e));
     } catch (e) {
       return Left(ServerFailure('Failed to fetch user stats: ${e.toString()}'));
@@ -24,15 +30,41 @@ class UserRepositoryImpl implements UserRepository {
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> getCurrentUser() async {
+  Future<Either<Failure, UserProfile>> getCurrentUser() async {
     try {
       final userResponse = await _apiClient.getCurrentUser();
-      return Right(userResponse.toJson());
+      return Right(_mapToProfile(userResponse));
     } on DioException catch (e) {
       return Left(_handleDioError(e));
     } catch (e) {
       return Left(ServerFailure('Failed to fetch user data: ${e.toString()}'));
     }
+  }
+
+  @override
+  Future<Either<Failure, UserProfile>> updateProfile(
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final userResponse = await _apiClient.updateProfile(data);
+      return Right(_mapToProfile(userResponse));
+    } on DioException catch (e) {
+      return Left(_handleDioError(e));
+    } catch (e) {
+      return Left(ServerFailure('Failed to update profile: ${e.toString()}'));
+    }
+  }
+
+  UserProfile _mapToProfile(UserResponse response) {
+    return UserProfile(
+      id: response.id,
+      name: response.name,
+      email: response.email,
+      role: response.role,
+      phone: response.phone,
+      profileImage: response.profileImage,
+      createdAt: response.createdAt,
+    );
   }
 
   /// Handle Dio errors and convert to appropriate Failures
@@ -44,7 +76,11 @@ class UserRepositoryImpl implements UserRepository {
         return ServerFailure('Connection timeout. Please try again.');
       case DioExceptionType.badResponse:
         final statusCode = error.response?.statusCode;
-        final message = error.response?.data['message'] ?? 'An error occurred';
+        final responseData = error.response?.data;
+        final message = responseData is Map<String, dynamic> &&
+                responseData['message'] is String
+            ? responseData['message'] as String
+            : 'An error occurred';
         if (statusCode == 401) {
           return AuthFailure('Unauthorized. Please login again.');
         } else {

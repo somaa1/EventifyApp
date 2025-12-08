@@ -7,6 +7,7 @@ import '../../domain/usecases/verify_otp_usecase.dart';
 import '../../domain/usecases/resend_otp_usecase.dart';
 import '../../domain/usecases/check_auth_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
+import '../../domain/repositories/auth_repository.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
@@ -18,6 +19,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final ResendOtpUseCase resendOtpUseCase;
   final CheckAuthUseCase checkAuthUseCase;
   final LogoutUseCase logoutUseCase;
+  final AuthRepository authRepository;
 
   AuthBloc({
     required this.loginUseCase,
@@ -26,6 +28,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.resendOtpUseCase,
     required this.checkAuthUseCase,
     required this.logoutUseCase,
+    required this.authRepository,
   }) : super(const AuthInitial()) {
     on<LoginRequested>(_onLoginRequested);
     on<RegisterRequested>(_onRegisterRequested);
@@ -148,12 +151,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     final isAuth = await checkAuthUseCase();
     if (isAuth) {
-      // User is authenticated, will navigate to home
-      emit(const AuthAuthenticated(
-        token: '',
-        name: '',
-        role: '',
-      ));
+      // Load saved user data from SharedPreferences
+      final token = await authRepository.getAuthToken() ?? '';
+      final user = await authRepository.getUserInfo();
+
+      if (user != null) {
+        // User is authenticated with valid data
+        emit(AuthAuthenticated(
+          token: token,
+          name: user.name,
+          role: user.role,
+        ));
+      } else {
+        // User data not found, force re-login
+        emit(const AuthUnauthenticated());
+      }
     } else {
       emit(const AuthUnauthenticated());
     }

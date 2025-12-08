@@ -86,12 +86,45 @@ class MyEventCard extends StatelessWidget {
                 ),
                 SizedBox(height: AppSpacing.md),
 
+                // Action Buttons for organizer view (invite/attendees/edit)
+                _buildOrganizerActions(context),
+
                 // Action Button
                 _buildActionButton(context),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildOrganizerActions(BuildContext context) {
+    // Only show for organizers/admins; since role not on entity, show when not past
+    if (isPast) return const SizedBox.shrink();
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Row(
+        children: [
+          _ActionTextButton(
+            icon: Icons.mail_outline,
+            label: 'Invite',
+            onTap: () => context.push('/events/${event.id}/invite'),
+          ),
+          SizedBox(width: AppSpacing.lg),
+          _ActionTextButton(
+            icon: Icons.group_outlined,
+            label: 'Attendees',
+            onTap: () => context.push('/events/${event.id}/attendees'),
+          ),
+          const Spacer(),
+          IconButton(
+            icon: Icon(Icons.edit, size: 20.r, color: AppColors.primary),
+            tooltip: 'Edit',
+            onPressed: () => context.push('/edit-event/${event.id}'),
+          ),
+        ],
       ),
     );
   }
@@ -213,9 +246,6 @@ class MyEventCard extends StatelessWidget {
     } else {
       return ElevatedButton(
         onPressed: () {
-          // Navigate to ticket screen
-          // Note: We would need the registration token here
-          // For now, just navigate to event details
           context.push('/events/${event.id}');
         },
         style: ElevatedButton.styleFrom(
@@ -228,22 +258,49 @@ class MyEventCard extends StatelessWidget {
           ),
           elevation: 0,
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.qr_code_2, size: 18.r),
-            SizedBox(width: 6.w),
-            Text(
-              'View Ticket',
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
+        child: Text(
+          'View Details',
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       );
     }
+  }
+}
+
+class _ActionTextButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _ActionTextButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8.r),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 20.r, color: AppColors.primary),
+          SizedBox(width: 6.w),
+          Text(
+            label,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

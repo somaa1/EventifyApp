@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import '../constants/api_constants.dart';
+import '../network/auth_interceptor.dart';
 import '../../features/auth/data/datasources/auth_api_client.dart';
 import '../../features/auth/data/datasources/auth_local_datasource.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
@@ -25,11 +26,22 @@ import '../../features/home/domain/usecases/get_events_usecase.dart';
 import '../../features/home/domain/usecases/get_user_stats_usecase.dart';
 import '../../features/home/domain/usecases/get_event_details_usecase.dart';
 import '../../features/home/domain/usecases/get_registered_events_usecase.dart';
+import '../../features/home/domain/usecases/get_my_events_usecase.dart';
+import '../../features/home/domain/usecases/create_event_usecase.dart';
+import '../../features/home/domain/usecases/update_event_usecase.dart';
+import '../../features/home/domain/usecases/delete_event_usecase.dart';
+import '../../features/home/domain/usecases/get_attendees_usecase.dart';
+import '../../features/profile/domain/usecases/get_profile_usecase.dart';
+import '../../features/profile/domain/usecases/update_profile_usecase.dart';
 import '../../features/home/presentation/cubit/home_cubit.dart';
 import '../../features/home/presentation/cubit/events_cubit.dart';
 import '../../features/home/presentation/cubit/event_details_cubit.dart';
 import '../../features/home/presentation/cubit/my_events_cubit.dart';
 import '../../features/home/presentation/cubit/calendar_cubit.dart';
+import '../../features/home/presentation/cubit/create_event_cubit.dart';
+import '../../features/home/presentation/cubit/event_management_cubit.dart';
+import '../../features/home/presentation/cubit/attendees_cubit.dart';
+import '../../features/profile/presentation/cubit/profile_cubit.dart';
 import '../../features/registration/data/datasources/registration_api_client.dart';
 import '../../features/registration/data/repositories/registration_repository_impl.dart';
 import '../../features/registration/domain/repositories/registration_repository.dart';
@@ -41,10 +53,12 @@ import '../../features/attendance/data/datasources/attendance_api_client.dart';
 import '../../features/attendance/data/repositories/attendance_repository_impl.dart';
 import '../../features/attendance/domain/repositories/attendance_repository.dart';
 import '../../features/attendance/domain/usecases/confirm_attendance_usecase.dart';
+import '../../features/attendance/presentation/cubit/attendance_cubit.dart';
 import '../../features/invitations/data/datasources/invitation_api_client.dart';
 import '../../features/invitations/data/repositories/invitation_repository_impl.dart';
 import '../../features/invitations/domain/repositories/invitation_repository.dart';
 import '../../features/invitations/domain/usecases/send_invitation_usecase.dart';
+import '../../features/invitations/presentation/cubit/invitation_cubit.dart';
 
 final getIt = GetIt.instance;
 
@@ -62,39 +76,14 @@ Future<void> initializeDependencies() async {
     ),
   );
 
-  // Dio HTTP Client
-  getIt.registerLazySingleton<Dio>(() {
-    final dio = Dio(
-      BaseOptions(
-        baseUrl: ApiConstants.baseUrl,
-        connectTimeout: ApiConstants.connectTimeout,
-        receiveTimeout: ApiConstants.receiveTimeout,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      ),
-    );
-
-    // Add interceptors
-    dio.interceptors.add(
-      PrettyDioLogger(
-        requestHeader: true,
-        requestBody: true,
-        responseBody: true,
-        responseHeader: false,
-        error: true,
-        compact: true,
-      ),
-    );
-
-    return dio;
-  });
-
   await getIt.allReady();
 
-  // Auth Feature
+  // Auth Feature - MUST be registered FIRST
+  // because Dio's AuthInterceptor depends on AuthLocalDataSource
   _registerAuthDependencies();
+
+  // Dio HTTP Client - registered AFTER auth dependencies
+  _registerDio();
 
   // Home Feature
   _registerHomeDependencies();
@@ -138,8 +127,8 @@ void _registerAuthDependencies() {
   getIt.registerLazySingleton(() => CheckAuthUseCase(getIt<AuthRepository>()));
   getIt.registerLazySingleton(() => LogoutUseCase(getIt<AuthRepository>()));
 
-  // Bloc
-  getIt.registerFactory(
+  // Bloc - Singleton to maintain auth state across screens
+  getIt.registerLazySingleton(
     () => AuthBloc(
       loginUseCase: getIt<LoginUseCase>(),
       registerUseCase: getIt<RegisterUseCase>(),
@@ -147,8 +136,45 @@ void _registerAuthDependencies() {
       resendOtpUseCase: getIt<ResendOtpUseCase>(),
       checkAuthUseCase: getIt<CheckAuthUseCase>(),
       logoutUseCase: getIt<LogoutUseCase>(),
+      authRepository: getIt<AuthRepository>(),
     ),
   );
+}
+
+void _registerDio() {
+  getIt.registerLazySingleton<Dio>(() {
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: ApiConstants.baseUrl,
+        connectTimeout: ApiConstants.connectTimeout,
+        receiveTimeout: ApiConstants.receiveTimeout,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      ),
+    );
+
+    // Add interceptors in order:
+    // 1. Auth Interceptor - adds Authorization header to requests
+    dio.interceptors.add(
+      AuthInterceptor(getIt<AuthLocalDataSource>()),
+    );
+
+    // 2. Logger Interceptor - logs all requests/responses
+    dio.interceptors.add(
+      PrettyDioLogger(
+        requestHeader: true,
+        requestBody: true,
+        responseBody: true,
+        responseHeader: false,
+        error: true,
+        compact: true,
+      ),
+    );
+
+    return dio;
+  });
 }
 
 void _registerHomeDependencies() {
@@ -187,6 +213,34 @@ void _registerHomeDependencies() {
     () => GetRegisteredEventsUseCase(getIt<EventRepository>()),
   );
 
+  getIt.registerLazySingleton(
+    () => GetMyEventsUseCase(getIt<EventRepository>()),
+  );
+
+  getIt.registerLazySingleton(
+    () => CreateEventUseCase(getIt<EventRepository>()),
+  );
+
+  getIt.registerLazySingleton(
+    () => UpdateEventUseCase(getIt<EventRepository>()),
+  );
+
+  getIt.registerLazySingleton(
+    () => DeleteEventUseCase(getIt<EventRepository>()),
+  );
+
+  getIt.registerLazySingleton(
+    () => GetAttendeesUseCase(getIt<EventRepository>()),
+  );
+
+  getIt.registerLazySingleton(
+    () => GetProfileUseCase(getIt<UserRepository>()),
+  );
+
+  getIt.registerLazySingleton(
+    () => UpdateProfileUseCase(getIt<UserRepository>()),
+  );
+
   // Cubits
   getIt.registerFactory(
     () => HomeCubit(
@@ -216,6 +270,33 @@ void _registerHomeDependencies() {
   getIt.registerFactory(
     () => CalendarCubit(
       getEventsUseCase: getIt<GetEventsUseCase>(),
+    ),
+  );
+
+  getIt.registerFactory(
+    () => CreateEventCubit(
+      createEventUseCase: getIt<CreateEventUseCase>(),
+      updateEventUseCase: getIt<UpdateEventUseCase>(),
+    ),
+  );
+
+  getIt.registerFactory(
+    () => EventManagementCubit(
+      getMyEventsUseCase: getIt<GetMyEventsUseCase>(),
+      deleteEventUseCase: getIt<DeleteEventUseCase>(),
+    ),
+  );
+
+  getIt.registerFactory(
+    () => AttendeesCubit(
+      getAttendeesUseCase: getIt<GetAttendeesUseCase>(),
+    ),
+  );
+
+  getIt.registerFactory(
+    () => ProfileCubit(
+      getProfileUseCase: getIt<GetProfileUseCase>(),
+      updateProfileUseCase: getIt<UpdateProfileUseCase>(),
     ),
   );
 }
@@ -270,6 +351,13 @@ void _registerAttendanceDependencies() {
   getIt.registerLazySingleton(
     () => ConfirmAttendanceUseCase(getIt<AttendanceRepository>()),
   );
+
+  // Cubit
+  getIt.registerFactory(
+    () => AttendanceCubit(
+      confirmAttendanceUseCase: getIt<ConfirmAttendanceUseCase>(),
+    ),
+  );
 }
 
 void _registerInvitationDependencies() {
@@ -286,5 +374,12 @@ void _registerInvitationDependencies() {
   // Use Cases
   getIt.registerLazySingleton(
     () => SendInvitationUseCase(getIt<InvitationRepository>()),
+  );
+
+  // Cubit
+  getIt.registerFactory(
+    () => InvitationCubit(
+      sendInvitationUseCase: getIt<SendInvitationUseCase>(),
+    ),
   );
 }

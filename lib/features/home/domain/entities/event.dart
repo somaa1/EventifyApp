@@ -52,13 +52,13 @@ class Event extends Equatable {
     required this.startDateTime,
     required this.endDateTime,
     required this.eventType,
-    required this.capacity,
-    required this.attendeeCount,
-    required this.organizerName,
-    required this.organizerId,
+    this.capacity = 0,           // Default to 0 (backend doesn't return this)
+    this.attendeeCount = 0,      // Default to 0 (backend doesn't return this)
+    this.organizerName = '',     // Default to empty (backend doesn't return this)
+    this.organizerId = '',       // Default to empty (backend doesn't return this)
     this.imageUrl,
     this.isRegistered = false,
-    required this.status,
+    this.status = 'UPCOMING',    // Default to UPCOMING (backend doesn't return this)
   });
 
   /// Check if event is full

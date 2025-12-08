@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/user.dart';
@@ -52,11 +53,44 @@ class AuthLocalDataSource {
 
   Future<bool> isAuthenticated() async {
     final token = await getAuthToken();
-    return token != null && token.isNotEmpty;
+    if (token == null || token.isEmpty) return false;
+
+    final isExpired = await _isTokenExpired(token);
+    if (isExpired) {
+      await clearAll();
+      return false;
+    }
+
+    return true;
   }
 
   Future<void> clearAll() async {
     await deleteAuthToken();
     await deleteUserInfo();
+  }
+
+  /// Decode JWT payload and check if the token is expired.
+  /// Returns true when token is malformed or already expired.
+  Future<bool> _isTokenExpired(String token) async {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return true;
+
+      final normalized = base64Url.normalize(parts[1]);
+      final payload = json.decode(utf8.decode(base64Url.decode(normalized)))
+          as Map<String, dynamic>;
+
+      final exp = payload['exp'];
+      if (exp is int) {
+        final expiry =
+            DateTime.fromMillisecondsSinceEpoch(exp * 1000, isUtc: true);
+        return DateTime.now().toUtc().isAfter(expiry);
+      }
+      // If no exp is provided, treat token as invalid
+      return true;
+    } catch (_) {
+      // Any parsing error means we should treat token as invalid/expired
+      return true;
+    }
   }
 }

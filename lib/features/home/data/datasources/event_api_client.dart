@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 import '../models/event_model.dart';
-import '../models/events_response.dart';
+import '../models/event_attendee_model.dart';
 
 part 'event_api_client.g.dart';
 
@@ -22,7 +22,7 @@ abstract class EventApiClient {
   /// - startDate: Filter by start date
   /// - endDate: Filter by end date
   @GET('/events')
-  Future<EventsResponse> getEvents({
+  Future<List<EventModel>> getEvents({
     @Query('page') int? page,
     @Query('limit') int? limit,
     @Query('search') String? search,
@@ -57,4 +57,10 @@ abstract class EventApiClient {
   /// DELETE /api/v1/events/{id}
   @DELETE('/events/{id}')
   Future<void> deleteEvent(@Path('id') String id);
+
+  /// Get attendees for an event (ORGANIZER/ADMIN)
+  ///
+  /// GET /api/v1/events/{id}/attendees
+  @GET('/events/{id}/attendees')
+  Future<List<EventAttendeeModel>> getAttendees(@Path('id') String id);
 }

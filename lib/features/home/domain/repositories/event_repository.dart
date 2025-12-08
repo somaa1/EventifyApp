@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
 import '../entities/event.dart';
 import '../entities/event_filter.dart';
+import '../entities/attendee.dart';
 
 /// Repository interface for event-related operations
 abstract class EventRepository {
@@ -38,4 +39,19 @@ abstract class EventRepository {
   /// Returns [Right<List<Event>>] on success
   /// Returns [Left<Failure>] on error
   Future<Either<Failure, List<Event>>> searchEvents(String query);
+
+  /// Create a new event (ORGANIZER/ADMIN)
+  Future<Either<Failure, Event>> createEvent(Map<String, dynamic> data);
+
+  /// Update an existing event (ORGANIZER/ADMIN)
+  Future<Either<Failure, Event>> updateEvent(
+    String id,
+    Map<String, dynamic> data,
+  );
+
+  /// Delete an event (ORGANIZER/ADMIN)
+  Future<Either<Failure, void>> deleteEvent(String id);
+
+  /// Get attendees for an event (ORGANIZER/ADMIN)
+  Future<Either<Failure, List<Attendee>>> getAttendees(String eventId);
 }

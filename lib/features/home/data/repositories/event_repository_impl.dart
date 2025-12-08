@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/event.dart';
 import '../../domain/entities/event_filter.dart';
+import '../../domain/entities/attendee.dart';
 import '../../domain/repositories/event_repository.dart';
 import '../datasources/event_api_client.dart';
 
@@ -30,7 +31,7 @@ class EventRepositoryImpl implements EventRepository {
       );
 
       // Convert models to entities
-      final events = response.events.map((model) => model.toEntity()).toList();
+      final events = response.map((model) => model.toEntity()).toList();
 
       return Right(events);
     } on DioException catch (e) {
@@ -58,7 +59,7 @@ class EventRepositoryImpl implements EventRepository {
       // For now, use getEvents with no filter
       // In the future, the API might have a specific endpoint for user's events
       final response = await _apiClient.getEvents();
-      final events = response.events.map((model) => model.toEntity()).toList();
+      final events = response.map((model) => model.toEntity()).toList();
       return Right(events);
     } on DioException catch (e) {
       return Left(_handleDioError(e));
@@ -73,7 +74,7 @@ class EventRepositoryImpl implements EventRepository {
       // For now, use getEvents with no filter
       // In the future, the API might have a specific endpoint for registered events
       final response = await _apiClient.getEvents();
-      final events = response.events.map((model) => model.toEntity()).toList();
+      final events = response.map((model) => model.toEntity()).toList();
       // Filter only registered events
       final registeredEvents =
           events.where((event) => event.isRegistered).toList();
@@ -90,12 +91,64 @@ class EventRepositoryImpl implements EventRepository {
   Future<Either<Failure, List<Event>>> searchEvents(String query) async {
     try {
       final response = await _apiClient.getEvents(search: query);
-      final events = response.events.map((model) => model.toEntity()).toList();
+      final events = response.map((model) => model.toEntity()).toList();
       return Right(events);
     } on DioException catch (e) {
       return Left(_handleDioError(e));
     } catch (e) {
       return Left(ServerFailure('Failed to search events: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Event>> createEvent(
+      Map<String, dynamic> data) async {
+    try {
+      final eventModel = await _apiClient.createEvent(data);
+      return Right(eventModel.toEntity());
+    } on DioException catch (e) {
+      return Left(_handleDioError(e));
+    } catch (e) {
+      return Left(ServerFailure('Failed to create event: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Event>> updateEvent(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final eventModel = await _apiClient.updateEvent(id, data);
+      return Right(eventModel.toEntity());
+    } on DioException catch (e) {
+      return Left(_handleDioError(e));
+    } catch (e) {
+      return Left(ServerFailure('Failed to update event: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteEvent(String id) async {
+    try {
+      await _apiClient.deleteEvent(id);
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(_handleDioError(e));
+    } catch (e) {
+      return Left(ServerFailure('Failed to delete event: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<Attendee>>> getAttendees(String eventId) async {
+    try {
+      final attendees = await _apiClient.getAttendees(eventId);
+      return Right(List<Attendee>.from(attendees));
+    } on DioException catch (e) {
+      return Left(_handleDioError(e));
+    } catch (e) {
+      return Left(ServerFailure('Failed to load attendees: ${e.toString()}'));
     }
   }
 
@@ -108,9 +161,17 @@ class EventRepositoryImpl implements EventRepository {
         return ServerFailure('Connection timeout. Please try again.');
       case DioExceptionType.badResponse:
         final statusCode = error.response?.statusCode;
-        final message = error.response?.data['message'] ?? 'An error occurred';
+        final responseData = error.response?.data;
+        final message = responseData is Map<String, dynamic> &&
+                responseData['message'] is String
+            ? responseData['message'] as String
+            : 'An error occurred';
         if (statusCode == 401) {
           return AuthFailure('Unauthorized. Please login again.');
+        } else if (statusCode == 403) {
+          return AuthFailure(
+            'Access denied. Please log in again or check your role.',
+          );
         } else if (statusCode == 404) {
           return ServerFailure('Event not found.');
         } else {

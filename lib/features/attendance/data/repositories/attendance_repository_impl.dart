@@ -35,7 +35,11 @@ class AttendanceRepositoryImpl implements AttendanceRepository {
         return ServerFailure('Connection timeout. Please try again.');
       case DioExceptionType.badResponse:
         final statusCode = error.response?.statusCode;
-        final message = error.response?.data['message'] ?? 'An error occurred';
+        final responseData = error.response?.data;
+        final message = responseData is Map<String, dynamic> &&
+                responseData['message'] is String
+            ? responseData['message'] as String
+            : 'An error occurred';
         if (statusCode == 401) {
           return AuthFailure('Unauthorized. Please login again.');
         } else if (statusCode == 404) {

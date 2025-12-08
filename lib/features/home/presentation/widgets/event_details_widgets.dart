@@ -64,10 +64,10 @@ class EventHeader extends StatelessWidget {
           ),
 
           // Back Button
-          SafeArea(
-            child: Positioned(
-              top: 8.h,
-              left: 8.w,
+          Positioned(
+            top: 8.h,
+            left: 8.w,
+            child: SafeArea(
               child: IconButton(
                 icon: Icon(
                   Icons.arrow_back,
@@ -366,6 +366,11 @@ class EventOrganizerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Safely derive an initial; backend currently doesn't return organizer info
+    final hasName = event.organizerName.isNotEmpty;
+    final initial = hasName ? event.organizerName[0].toUpperCase() : '?';
+    final displayName = hasName ? event.organizerName : 'Organizer';
+
     return Container(
       padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -382,7 +387,7 @@ class EventOrganizerCard extends StatelessWidget {
             radius: 24.r,
             backgroundColor: AppColors.primary,
             child: Text(
-              event.organizerName[0].toUpperCase(),
+              initial,
               style: AppTextStyles.bodyLarge.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -402,7 +407,7 @@ class EventOrganizerCard extends StatelessWidget {
                 ),
                 SizedBox(height: 2.h),
                 Text(
-                  event.organizerName,
+                  displayName,
                   style: AppTextStyles.bodyMedium.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -516,7 +521,7 @@ class EventActionButtons extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       height: 50.h,
-      child: ElevatedButton.icon(
+      child: ElevatedButton(
         onPressed: onManage,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
@@ -525,13 +530,20 @@ class EventActionButtons extends StatelessWidget {
             borderRadius: BorderRadius.circular(12.r),
           ),
         ),
-        icon: Icon(Icons.settings, size: 24.r),
-        label: Text(
-          'Manage Event',
-          style: AppTextStyles.bodyLarge.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.settings, size: 22.r, color: Colors.white),
+            SizedBox(width: 8.w),
+            Text(
+              'Manage Event',
+              style: AppTextStyles.bodyLarge.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
         ),
       ),
     );

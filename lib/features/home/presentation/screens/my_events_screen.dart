@@ -6,9 +6,9 @@ import 'package:skeletonizer/skeletonizer.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_text_styles.dart';
 import '../cubit/my_events_cubit.dart';
 import '../cubit/my_events_state.dart';
+import '../widgets/main_bottom_navigation.dart';
 import '../widgets/my_events_widgets.dart';
 import '../widgets/error_view.dart';
 import '../../domain/entities/event.dart';
@@ -75,6 +75,7 @@ class MyEventsScreen extends StatelessWidget {
               return const SizedBox.shrink();
             },
           ),
+          bottomNavigationBar: const MainBottomNavigation(),
         ),
       ),
     );

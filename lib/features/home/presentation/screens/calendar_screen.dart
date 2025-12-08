@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../cubit/calendar_cubit.dart';
 import '../cubit/calendar_state.dart';
+import '../widgets/main_bottom_navigation.dart';
 import '../widgets/calendar_widgets.dart';
 import '../widgets/error_view.dart';
 import '../../domain/entities/event.dart';
@@ -55,6 +56,7 @@ class CalendarScreen extends StatelessWidget {
             return const SizedBox.shrink();
           },
         ),
+        bottomNavigationBar: const MainBottomNavigation(),
       ),
     );
   }

@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:async';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/di/injection.dart';
-import '../../auth/data/datasources/auth_local_datasource.dart';
+import '../../auth/presentation/bloc/auth_bloc.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -29,13 +30,26 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (!mounted) return;
 
-    // Check authentication status
-    final authLocalDataSource = getIt<AuthLocalDataSource>();
-    final isAuthenticated = await authLocalDataSource.isAuthenticated();
+    // Get AuthBloc singleton from DI
+    final authBloc = getIt<AuthBloc>();
 
-    if (isAuthenticated) {
-      // User is logged in, navigate to home
-      if (!mounted) return;
+    // Dispatch CheckAuthRequested event to load user data
+    authBloc.add(const CheckAuthRequested());
+
+    // Wait for AuthBloc to process the event and emit state
+    // Using first where to get the first non-initial state
+    final authState = await authBloc.stream.firstWhere(
+      (state) => state is! AuthInitial,
+      orElse: () => const AuthUnauthenticated(),
+    ).timeout(
+      const Duration(seconds: 2),
+      onTimeout: () => const AuthUnauthenticated(),
+    );
+
+    if (!mounted) return;
+
+    if (authState is AuthAuthenticated) {
+      // User is logged in with valid data, navigate to home
       context.go(AppRouter.home);
     } else {
       // User is not logged in, check if first launch

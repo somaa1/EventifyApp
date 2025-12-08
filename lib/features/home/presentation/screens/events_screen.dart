@@ -6,9 +6,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
-import '../../../../core/di/injection.dart';
 import '../cubit/events_cubit.dart';
 import '../cubit/events_state.dart';
+import '../widgets/main_bottom_navigation.dart';
 import '../widgets/custom_search_bar.dart';
 import '../widgets/event_card.dart';
 import '../widgets/skeleton_event_card.dart';
@@ -54,139 +54,135 @@ class _EventsScreenState extends State<EventsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => getIt<EventsCubit>()..loadEvents(),
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Discover Events',
-            style: AppTextStyles.headingMedium.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          backgroundColor: AppColors.surface,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(
-              Icons.arrow_back,
-              color: AppColors.textPrimary,
-              size: 24.w,
-            ),
-            onPressed: () => context.pop(),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Discover Events',
+          style: AppTextStyles.headingMedium.copyWith(
+            fontWeight: FontWeight.bold,
           ),
         ),
-        body: SafeArea(
-          child: Column(
-            children: [
-              // Search bar
-              Padding(
-                padding: EdgeInsets.all(AppSpacing.lg),
-                child: CustomSearchBar(
-                  controller: _searchController,
-                  hintText: 'Search events...',
-                  onChanged: (value) {
-                    // Debounce search
-                    Future.delayed(const Duration(milliseconds: 500), () {
-                      if (value == _searchController.text) {
-                        context.read<EventsCubit>().search(value);
-                      }
-                    });
-                  },
-                  onFilterTap: () {
-                    _showFilterBottomSheet(context);
-                  },
-                ),
-              ),
-              // Events list
-              Expanded(
-                child: BlocBuilder<EventsCubit, EventsState>(
-                  builder: (context, state) {
-                    if (state is EventsLoading) {
-                      return ListView.builder(
-                        padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                        itemCount: 5,
-                        itemBuilder: (context, index) =>
-                            const SkeletonEventCard(),
-                      );
-                    }
-
-                    if (state is EventsError && state.currentEvents == null) {
-                      return ErrorView(
-                        message: state.message,
-                        onRetry: () => context.read<EventsCubit>().loadEvents(),
-                      );
-                    }
-
-                    if (state is EventsEmpty) {
-                      return EmptyState(
-                        icon: Icons.event_busy,
-                        title: 'No Events Found',
-                        message:
-                            state.activeFilter.hasActiveFilters
-                                ? 'Try adjusting your filters or search terms'
-                                : 'No events are available at the moment',
-                        actionText: state.activeFilter.hasActiveFilters
-                            ? 'Clear Filters'
-                            : null,
-                        onActionPressed: state.activeFilter.hasActiveFilters
-                            ? () => context.read<EventsCubit>().clearFilters()
-                            : null,
-                      );
-                    }
-
-                    if (state is EventsLoaded ||
-                        state is EventsLoadingMore ||
-                        state is EventsRefreshing) {
-                      final events = state is EventsLoaded
-                          ? state.events
-                          : state is EventsLoadingMore
-                              ? state.currentEvents
-                              : state is EventsRefreshing
-                                  ? state.currentEvents
-                                  : <dynamic>[];
-
-                      return RefreshIndicator(
-                        onRefresh: () async {
-                          await context.read<EventsCubit>().refresh();
-                        },
-                        child: ListView.builder(
-                          controller: _scrollController,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: AppSpacing.lg,
-                          ),
-                          itemCount: events.length +
-                              (state is EventsLoadingMore ? 1 : 0),
-                          itemBuilder: (context, index) {
-                            if (index >= events.length) {
-                              return const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 16.0),
-                                child: Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              );
-                            }
-
-                            final event = events[index];
-                            return EventCard(
-                              event: event,
-                              onTap: () {
-                                context
-                                    .push('${AppRouter.events}/${event.id}');
-                              },
-                            );
-                          },
-                        ),
-                      );
-                    }
-
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ),
-            ],
+        backgroundColor: AppColors.surface,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: AppColors.textPrimary,
+            size: 24.w,
           ),
+          onPressed: () => context.pop(),
         ),
       ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Search bar
+            Padding(
+              padding: EdgeInsets.all(AppSpacing.lg),
+              child: CustomSearchBar(
+                controller: _searchController,
+                hintText: 'Search events...',
+                onChanged: (value) {
+                  // Debounce search
+                  Future.delayed(const Duration(milliseconds: 500), () {
+                    if (value == _searchController.text) {
+                      context.read<EventsCubit>().search(value);
+                    }
+                  });
+                },
+                onFilterTap: () {
+                  _showFilterBottomSheet(context);
+                },
+              ),
+            ),
+            // Events list
+            Expanded(
+              child: BlocBuilder<EventsCubit, EventsState>(
+                builder: (context, state) {
+                  if (state is EventsLoading) {
+                    return ListView.builder(
+                      padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                      itemCount: 5,
+                      itemBuilder: (context, index) =>
+                          const SkeletonEventCard(),
+                    );
+                  }
+
+                  if (state is EventsError && state.currentEvents == null) {
+                    return ErrorView(
+                      message: state.message,
+                      onRetry: () => context.read<EventsCubit>().loadEvents(),
+                    );
+                  }
+
+                  if (state is EventsEmpty) {
+                    return EmptyState(
+                      icon: Icons.event_busy,
+                      title: 'No Events Found',
+                      message: state.activeFilter.hasActiveFilters
+                          ? 'Try adjusting your filters or search terms'
+                          : 'No events are available at the moment',
+                      actionText: state.activeFilter.hasActiveFilters
+                          ? 'Clear Filters'
+                          : null,
+                      onActionPressed: state.activeFilter.hasActiveFilters
+                          ? () => context.read<EventsCubit>().clearFilters()
+                          : null,
+                    );
+                  }
+
+                  if (state is EventsLoaded ||
+                      state is EventsLoadingMore ||
+                      state is EventsRefreshing) {
+                    final events = state is EventsLoaded
+                        ? state.events
+                        : state is EventsLoadingMore
+                            ? state.currentEvents
+                            : state is EventsRefreshing
+                                ? state.currentEvents
+                                : <dynamic>[];
+
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        await context.read<EventsCubit>().refresh();
+                      },
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                        ),
+                        itemCount:
+                            events.length + (state is EventsLoadingMore ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index >= events.length) {
+                            return const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16.0),
+                              child: Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          }
+
+                          final event = events[index];
+                          return EventCard(
+                            event: event,
+                            onTap: () {
+                              context.push('${AppRouter.events}/${event.id}');
+                            },
+                          );
+                        },
+                      ),
+                    );
+                  }
+
+                  return const SizedBox.shrink();
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: const MainBottomNavigation(),
     );
   }
 

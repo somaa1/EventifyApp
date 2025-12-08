@@ -13,6 +13,7 @@ import '../cubit/home_cubit.dart';
 import '../cubit/home_state.dart';
 import '../cubit/events_cubit.dart';
 import '../cubit/events_state.dart';
+import '../widgets/main_bottom_navigation.dart';
 import '../widgets/stat_card.dart';
 import '../widgets/event_card.dart';
 import '../widgets/section_header.dart';
@@ -40,6 +41,7 @@ class HomeScreen extends StatelessWidget {
         ),
       ],
       child: Scaffold(
+        bottomNavigationBar: const MainBottomNavigation(),
         body: SafeArea(
           child: BlocConsumer<AuthBloc, AuthState>(
             listener: (context, state) {
@@ -78,8 +80,13 @@ class HomeScreen extends StatelessWidget {
     String userRole = 'ATTENDEE';
 
     if (authState is AuthAuthenticated) {
-      userName = authState.name;
-      userRole = authState.role;
+      // Only use authState values if they're not empty
+      if (authState.name.isNotEmpty) {
+        userName = authState.name;
+      }
+      if (authState.role.isNotEmpty) {
+        userRole = authState.role;
+      }
     }
 
     return SliverToBoxAdapter(
@@ -120,13 +127,45 @@ class HomeScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                IconButton(
-                  onPressed: () => _handleLogout(context),
-                  icon: Icon(
-                    Icons.logout,
-                    size: 24.w,
-                    color: AppColors.error,
-                  ),
+                Row(
+                  children: [
+                    if (userRole == 'ADMIN')
+                      IconButton(
+                        onPressed: () =>
+                            context.push(AppRouter.adminDashboard),
+                        icon: Icon(
+                          Icons.dashboard_customize,
+                          size: 24.w,
+                          color: AppColors.warning,
+                        ),
+                      ),
+                    if (userRole != 'ATTENDEE') ...[
+                      IconButton(
+                        onPressed: () => context.push(AppRouter.createEvent),
+                        icon: Icon(
+                          Icons.add_circle_outline,
+                          size: 24.w,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => context.push(AppRouter.eventManagement),
+                        icon: Icon(
+                          Icons.settings,
+                          size: 24.w,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                    IconButton(
+                      onPressed: () => _handleLogout(context),
+                      icon: Icon(
+                        Icons.logout,
+                        size: 24.w,
+                        color: AppColors.error,
+                      ),
+                    ),
+                  ],
                 )
                     .animate()
                     .fadeIn(duration: 600.ms, delay: 200.ms)
@@ -209,7 +248,8 @@ class HomeScreen extends StatelessWidget {
                     crossAxisCount: 2,
                     mainAxisSpacing: AppSpacing.md,
                     crossAxisSpacing: AppSpacing.md,
-                    childAspectRatio: 1.3,
+                    // Slightly taller tiles to avoid overflow in loading skeletons
+                    childAspectRatio: 1.1,
                     children: List.generate(4, (_) => const SkeletonStatCard()),
                   ),
                 ],
@@ -344,7 +384,8 @@ class HomeScreen extends StatelessWidget {
       crossAxisCount: 2,
       mainAxisSpacing: AppSpacing.md,
       crossAxisSpacing: AppSpacing.md,
-      childAspectRatio: 1.3,
+      // Slightly taller tiles to avoid overflow in loading/loaded cards
+      childAspectRatio: 1.1,
       children: cards,
     );
   }

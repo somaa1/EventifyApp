@@ -18,7 +18,7 @@ class _EventApiClient implements EventApiClient {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<EventsResponse> getEvents({
+  Future<List<EventModel>> getEvents({
     int? page,
     int? limit,
     String? search,
@@ -38,7 +38,7 @@ class _EventApiClient implements EventApiClient {
     queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<EventsResponse>(
+    final _options = _setStreamType<List<EventModel>>(
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
@@ -48,10 +48,14 @@ class _EventApiClient implements EventApiClient {
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
-    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late EventsResponse _value;
+    final _result = await _dio.fetch<List<dynamic>>(_options);
+    late List<EventModel> _value;
     try {
-      _value = EventsResponse.fromJson(_result.data!);
+      _value = _result.data!
+          .map(
+            (dynamic i) => EventModel.fromJson(i as Map<String, dynamic>),
+          )
+          .toList();
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
@@ -162,6 +166,38 @@ class _EventApiClient implements EventApiClient {
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     await _dio.fetch<void>(_options);
+  }
+
+  @override
+  Future<List<EventAttendeeModel>> getAttendees(String id) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<List<EventAttendeeModel>>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/events/${id}/attendees',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<List<dynamic>>(_options);
+    late List<EventAttendeeModel> _value;
+    try {
+      _value = _result.data!
+          .map(
+            (dynamic i) =>
+                EventAttendeeModel.fromJson(i as Map<String, dynamic>),
+          )
+          .toList();
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
   }
 
   RequestOptions _setStreamType<T>(RequestOptions requestOptions) {
