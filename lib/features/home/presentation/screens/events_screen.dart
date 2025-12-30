@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
+import '../../domain/entities/event_filter.dart';
 import '../cubit/events_cubit.dart';
 import '../cubit/events_state.dart';
 import '../widgets/main_bottom_navigation.dart';
@@ -50,6 +51,13 @@ class _EventsScreenState extends State<EventsScreen> {
     final maxScroll = _scrollController.position.maxScrollExtent;
     final currentScroll = _scrollController.offset;
     return currentScroll >= (maxScroll * 0.9);
+  }
+
+  EventFilter _getActiveFilter(EventsState state) {
+    if (state is EventsLoaded) return state.activeFilter;
+    if (state is EventsLoadingMore) return state.activeFilter;
+    if (state is EventsEmpty) return state.activeFilter;
+    return EventFilter.empty;
   }
 
   @override
@@ -120,8 +128,8 @@ class _EventsScreenState extends State<EventsScreen> {
                       icon: Icons.event_busy,
                       title: 'No Events Found',
                       message: state.activeFilter.hasActiveFilters
-                          ? 'Try adjusting your filters or search terms'
-                          : 'No events are available at the moment',
+                          ? 'No events match your filters.\nTry adjusting your search or filters.'
+                          : 'No events are currently available.\nCheck back later!',
                       actionText: state.activeFilter.hasActiveFilters
                           ? 'Clear Filters'
                           : null,
@@ -257,40 +265,76 @@ class _EventsScreenState extends State<EventsScreen> {
                         ),
                       ),
                       SizedBox(height: AppSpacing.sm),
-                      Wrap(
-                        spacing: 8.w,
-                        children: [
-                          'All',
-                          'CONFERENCE',
-                          'WORKSHOP',
-                          'MEETUP',
-                          'SEMINAR',
-                          'WEBINAR'
-                        ]
-                            .map((type) => FilterChip(
-                                  label: Text(type),
-                                  selected: false, // TODO: Connect to state
-                                  onSelected: (selected) {
-                                    // TODO: Apply filter
-                                  },
-                                ))
-                            .toList(),
+                      BlocBuilder<EventsCubit, EventsState>(
+                        builder: (context, state) {
+                          final activeFilter = _getActiveFilter(state);
+                          final selectedType = activeFilter.eventType;
+
+                          return Wrap(
+                            spacing: 8.w,
+                            runSpacing: 8.h,
+                            children: [
+                              'All',
+                              'CONFERENCE',
+                              'WORKSHOP',
+                              'MEETUP',
+                              'SEMINAR',
+                              'WEBINAR'
+                            ]
+                                .map((type) => FilterChip(
+                                      label: Text(type),
+                                      selected: type == 'All'
+                                          ? selectedType == null
+                                          : selectedType == type,
+                                      onSelected: (selected) {
+                                        final newType =
+                                            type == 'All' ? null : type;
+                                        final newFilter = activeFilter.copyWith(
+                                            eventType: newType);
+                                        context
+                                            .read<EventsCubit>()
+                                            .applyFilter(newFilter);
+                                        Navigator.pop(
+                                            context); // Close filter sheet
+                                      },
+                                      selectedColor:
+                                          AppColors.primary.withOpacity(0.2),
+                                      labelStyle: AppTextStyles.bodySmall.copyWith(
+                                        color: (type == 'All'
+                                                ? selectedType == null
+                                                : selectedType == type)
+                                            ? AppColors.primary
+                                            : AppColors.textSecondary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ))
+                                .toList(),
+                          );
+                        },
                       ),
                       SizedBox(height: AppSpacing.lg),
                       // Show Past Events
-                      SwitchListTile(
-                        title: Text(
-                          'Show Past Events',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        value: false, // TODO: Connect to state
-                        onChanged: (value) {
-                          // TODO: Apply filter
+                      BlocBuilder<EventsCubit, EventsState>(
+                        builder: (context, state) {
+                          final activeFilter = _getActiveFilter(state);
+
+                          return SwitchListTile(
+                            title: Text(
+                              'Show Past Events',
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            value: activeFilter.showPastEvents,
+                            onChanged: (value) {
+                              final newFilter =
+                                  activeFilter.copyWith(showPastEvents: value);
+                              context.read<EventsCubit>().applyFilter(newFilter);
+                            },
+                            activeColor: AppColors.primary,
+                            contentPadding: EdgeInsets.zero,
+                          );
                         },
-                        activeColor: AppColors.primary,
-                        contentPadding: EdgeInsets.zero,
                       ),
                       SizedBox(height: AppSpacing.lg),
                     ],

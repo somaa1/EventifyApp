@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -280,12 +281,6 @@ class EventDetailsScreen extends StatelessWidget {
   }
 
   void _handleManage(BuildContext context, Event event) {
-    // TODO: Navigate to event management screen (Phase 7.2)
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Event Management coming in Phase 7.2!'),
-        backgroundColor: AppColors.primary,
-      ),
-    );
+    context.push(AppRouter.eventManagement);
   }
 }

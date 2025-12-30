@@ -58,7 +58,16 @@ class EventManagementScreen extends StatelessWidget {
           listener: (context, state) {
             if (state is EventManagementError) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: AppColors.error,
+                  duration: const Duration(seconds: 4),
+                  action: SnackBarAction(
+                    label: 'Dismiss',
+                    textColor: Colors.white,
+                    onPressed: () {},
+                  ),
+                ),
               );
             }
           },
@@ -77,43 +86,68 @@ class EventManagementScreen extends StatelessWidget {
               );
             }
 
-            if (state is EventManagementLoaded) {
-              if (state.events.isEmpty) {
-                return Center(
-                  child: Text(
-                    'No events yet. Create your first event!',
-                    style: AppTextStyles.bodyMedium,
-                  ),
-                );
-              }
+            // Handle both Loaded and Deleting states
+            final events = state is EventManagementLoaded
+                ? state.events
+                : state is EventManagementDeleting
+                    ? state.events
+                    : <Event>[];
 
-              return RefreshIndicator(
-                onRefresh: () => context.read<EventManagementCubit>().refresh(),
-                child: ListView.builder(
-                  padding: EdgeInsets.all(AppSpacing.md),
-                  itemCount: state.events.length,
-                  itemBuilder: (context, index) {
-                    final event = state.events[index];
-                    return _EventTile(
-                      event: event,
-                      onEdit: () => context.push(
-                        AppRouter.editEvent.replaceAll(':id', event.id),
-                        extra: event,
+            final deletingEventId = state is EventManagementDeleting
+                ? state.deletingEventId
+                : null;
+
+            if (events.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.event_busy,
+                        size: 64.r, color: AppColors.textSecondary),
+                    SizedBox(height: AppSpacing.md),
+                    Text(
+                      'No events yet',
+                      style: AppTextStyles.headingSmall,
+                    ),
+                    SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'Create your first event to get started!',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
                       ),
-                      onDelete: () => _confirmDelete(context, event.id),
-                      onInvite: () => context.push(
-                        AppRouter.sendInvitation.replaceAll(':id', event.id),
-                      ),
-                      onAttendees: () => context.push(
-                        AppRouter.attendeeList.replaceAll(':id', event.id),
-                      ),
-                    );
-                  },
+                    ),
+                  ],
                 ),
               );
             }
 
-            return const SizedBox.shrink();
+            return RefreshIndicator(
+              onRefresh: () => context.read<EventManagementCubit>().refresh(),
+              child: ListView.builder(
+                padding: EdgeInsets.all(AppSpacing.md),
+                itemCount: events.length,
+                itemBuilder: (context, index) {
+                  final event = events[index];
+                  final isDeleting = deletingEventId == event.id;
+
+                  return _EventTile(
+                    event: event,
+                    isDeleting: isDeleting,
+                    onEdit: () => context.push(
+                      AppRouter.editEvent.replaceAll(':id', event.id),
+                      extra: event,
+                    ),
+                    onDelete: () => _confirmDelete(context, event.id),
+                    onInvite: () => context.push(
+                      AppRouter.sendInvitation.replaceAll(':id', event.id),
+                    ),
+                    onAttendees: () => context.push(
+                      AppRouter.attendeeList.replaceAll(':id', event.id),
+                    ),
+                  );
+                },
+              ),
+            );
           },
         ),
       ),
@@ -123,6 +157,7 @@ class EventManagementScreen extends StatelessWidget {
 
 class _EventTile extends StatelessWidget {
   final Event event;
+  final bool isDeleting;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final VoidCallback onInvite;
@@ -130,6 +165,7 @@ class _EventTile extends StatelessWidget {
 
   const _EventTile({
     required this.event,
+    required this.isDeleting,
     required this.onEdit,
     required this.onDelete,
     required this.onInvite,
@@ -139,20 +175,49 @@ class _EventTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-      margin: EdgeInsets.only(bottom: AppSpacing.sm),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      margin: EdgeInsets.only(bottom: AppSpacing.md),
+      elevation: 2,
       child: Padding(
         padding: EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              event.title,
-              style: AppTextStyles.headingSmall.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+            // Event title and type
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    event.title,
+                    style: AppTextStyles.headingSmall.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 8.w,
+                    vertical: 4.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Text(
+                    event.eventType,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
             ),
             SizedBox(height: 4.h),
+
+            // Description
             Text(
               event.description,
               maxLines: 2,
@@ -162,19 +227,28 @@ class _EventTile extends StatelessWidget {
               ),
             ),
             SizedBox(height: 8.h),
+
+            // Location and capacity
             Row(
               children: [
-                Chip(
-                  label: Text(event.eventType),
-                  backgroundColor: AppColors.primary.withOpacity(0.1),
-                  labelStyle: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
+                Icon(Icons.location_on,
+                    size: 14.r, color: AppColors.textSecondary),
+                SizedBox(width: 4.w),
+                Expanded(
+                  child: Text(
+                    event.location,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                SizedBox(width: AppSpacing.sm),
+                SizedBox(width: 8.w),
+                Icon(Icons.people, size: 14.r, color: AppColors.textSecondary),
+                SizedBox(width: 4.w),
                 Text(
-                  'Capacity: ${event.capacity}',
+                  '${event.attendeeCount ?? 0}/${event.capacity}',
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -182,32 +256,95 @@ class _EventTile extends StatelessWidget {
               ],
             ),
             SizedBox(height: AppSpacing.sm),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+
+            // Action buttons - RESPONSIVE WRAP LAYOUT
+            Wrap(
+              spacing: 4.w,
+              runSpacing: 4.h,
+              alignment: WrapAlignment.end,
               children: [
-                TextButton.icon(
-                  onPressed: onInvite,
-                  icon: const Icon(Icons.mail_outline),
-                  label: const Text('Invite'),
+                _ActionButton(
+                  icon: Icons.mail_outline,
+                  label: 'Invite',
+                  onPressed: isDeleting ? null : onInvite,
+                  color: AppColors.info,
                 ),
-                TextButton.icon(
-                  onPressed: onAttendees,
-                  icon: const Icon(Icons.group),
-                  label: const Text('Attendees'),
+                _ActionButton(
+                  icon: Icons.group,
+                  label: 'Attendees',
+                  onPressed: isDeleting ? null : onAttendees,
+                  color: AppColors.secondary,
                 ),
-                TextButton.icon(
-                  onPressed: onEdit,
-                  icon: const Icon(Icons.edit),
-                  label: const Text('Edit'),
+                _ActionButton(
+                  icon: Icons.edit,
+                  label: 'Edit',
+                  onPressed: isDeleting ? null : onEdit,
+                  color: AppColors.primary,
                 ),
-                TextButton.icon(
-                  onPressed: onDelete,
-                  icon: const Icon(Icons.delete_outline),
-                  label: const Text('Delete'),
+                _ActionButton(
+                  icon: Icons.delete_outline,
+                  label: 'Delete',
+                  onPressed: isDeleting ? null : onDelete,
+                  color: AppColors.error,
+                  isLoading: isDeleting,
+                  isDangerous: true,
                 ),
               ],
-            )
+            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// NEW: Compact action button widget
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+  final Color color;
+  final bool isLoading;
+  final bool isDangerous;
+
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+    required this.color,
+    this.isLoading = false,
+    this.isDangerous = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 32.h,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: isLoading
+            ? SizedBox(
+                width: 14.w,
+                height: 14.h,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(color),
+                ),
+              )
+            : Icon(icon, size: 16.r),
+        label: Text(label),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: color,
+          side: BorderSide(
+            color: isDangerous ? color : color.withOpacity(0.3),
+            width: isDangerous ? 1.5 : 1,
+          ),
+          padding: EdgeInsets.symmetric(
+            horizontal: 8.w,
+            vertical: 4.h,
+          ),
+          minimumSize: Size(0, 32.h),
+          visualDensity: VisualDensity.compact,
         ),
       ),
     );

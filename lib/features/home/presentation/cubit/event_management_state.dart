@@ -31,3 +31,13 @@ class EventManagementError extends EventManagementState {
   @override
   List<Object?> get props => [message];
 }
+
+class EventManagementDeleting extends EventManagementState {
+  final List<Event> events;
+  final String deletingEventId;
+
+  const EventManagementDeleting(this.events, this.deletingEventId);
+
+  @override
+  List<Object?> get props => [events, deletingEventId];
+}

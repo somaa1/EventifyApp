@@ -120,12 +120,59 @@ class _EditEventScreenState extends State<EditEventScreen> {
         listener: (context, state) {
           if (state is CreateEventSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Event updated successfully')),
+              SnackBar(
+                content: const Text('Event updated successfully!'),
+                backgroundColor: AppColors.success,
+              ),
             );
             context.pop();
           } else if (state is CreateEventError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
+            // Improved error handling
+            String errorMessage = state.message;
+            bool isServerError = false;
+            bool isNetworkError = false;
+
+            if (errorMessage.contains('500') ||
+                errorMessage.contains('Internal Server Error')) {
+              isServerError = true;
+              errorMessage =
+                  'Server error: Unable to update event.\n\nThis is a backend issue. The server returned a 500 error.\n\nPlease:\n• Try again in a few minutes\n• Check if other events can be edited\n• Contact support if the issue persists';
+            } else if (errorMessage.contains('Network') ||
+                errorMessage.contains('connection')) {
+              isNetworkError = true;
+              errorMessage =
+                  'No internet connection. Please check your network and try again.';
+            }
+
+            showDialog(
+              context: context,
+              builder: (dialogContext) => AlertDialog(
+                title: Row(
+                  children: [
+                    Icon(
+                      isNetworkError ? Icons.wifi_off : Icons.error_outline,
+                      color: AppColors.error,
+                    ),
+                    SizedBox(width: 8.w),
+                    const Text('Update Failed'),
+                  ],
+                ),
+                content: Text(errorMessage),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: const Text('Close'),
+                  ),
+                  if (isServerError)
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(dialogContext);
+                        _submit(context);
+                      },
+                      child: const Text('Retry'),
+                    ),
+                ],
+              ),
             );
           }
         },

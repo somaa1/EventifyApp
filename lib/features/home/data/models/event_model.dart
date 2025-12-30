@@ -25,6 +25,14 @@ class EventModel extends Event {
 
   /// Create EventModel from JSON with default values for missing fields
   factory EventModel.fromJson(Map<String, dynamic> json) {
+    int _parseInt(dynamic value) {
+      if (value == null) return 0;
+      if (value is int) return value;
+      if (value is double) return value.toInt();
+      if (value is String) return int.tryParse(value) ?? 0;
+      return 0;
+    }
+
     return EventModel(
       id: json['id']?.toString() ?? '0',
       title: json['title'] as String? ?? '',
@@ -37,9 +45,9 @@ class EventModel extends Event {
           ? DateTime.parse(json['endDateTime'] as String)
           : DateTime.now(),
       eventType: json['eventType'] as String? ?? 'PUBLIC',
-      // Backend doesn't return these fields - use defaults
-      capacity: json['capacity'] as int? ?? 0,
-      attendeeCount: json['attendeeCount'] as int? ?? 0,
+      // Capacity now comes from backend; keep defensive defaults
+      capacity: _parseInt(json['capacity']),
+      attendeeCount: _parseInt(json['attendeeCount']),
       organizerName: json['organizerName'] as String? ?? '',
       organizerId: json['organizerId']?.toString() ?? '',
       imageUrl: json['imageUrl'] as String?,

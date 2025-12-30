@@ -52,20 +52,24 @@ class Event extends Equatable {
     required this.startDateTime,
     required this.endDateTime,
     required this.eventType,
-    this.capacity = 0,           // Default to 0 (backend doesn't return this)
-    this.attendeeCount = 0,      // Default to 0 (backend doesn't return this)
-    this.organizerName = '',     // Default to empty (backend doesn't return this)
-    this.organizerId = '',       // Default to empty (backend doesn't return this)
+    this.capacity = 0,           // Default to 0 when missing from backend
+    this.attendeeCount = 0,      // Default to 0 when missing from backend
+    this.organizerName = '',     // Default to empty when missing from backend
+    this.organizerId = '',       // Default to empty when missing from backend
     this.imageUrl,
     this.isRegistered = false,
-    this.status = 'UPCOMING',    // Default to UPCOMING (backend doesn't return this)
+    this.status = 'UPCOMING',    // Default to UPCOMING when missing from backend
   });
 
   /// Check if event is full
-  bool get isFull => attendeeCount >= capacity;
+  bool get isFull => capacity > 0 && attendeeCount >= capacity;
 
   /// Get remaining spots
-  int get remainingSpots => capacity - attendeeCount;
+  int get remainingSpots {
+    if (capacity <= 0) return 0;
+    final remaining = capacity - attendeeCount;
+    return remaining < 0 ? 0 : remaining;
+  }
 
   /// Check if event is in the future
   bool get isUpcoming => startDateTime.isAfter(DateTime.now());
