@@ -89,10 +89,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               if (state is AuthAuthenticated) {
                 // Show success message
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Verification successful!'),
+                  SnackBar(
+                    content: const Text('Verification successful!'),
                     backgroundColor: AppColors.success,
-                    duration: Duration(seconds: 1),
+                    duration: const Duration(seconds: 1),
                   ),
                 );
                 // Navigate to home screen

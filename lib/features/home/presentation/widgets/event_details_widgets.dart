@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/widgets/glass_container.dart';
+import '../../../../core/widgets/modern_button.dart';
 import '../../domain/entities/event.dart';
 
 /// Event Header with hero image and gradient overlay
@@ -23,40 +27,43 @@ class EventHeader extends StatelessWidget {
       height: 250.h,
       child: Stack(
         children: [
-          // Background Image
-          Container(
-            width: double.infinity,
-            height: 250.h,
-            decoration: BoxDecoration(
-              color: AppColors.primaryLight,
-              image: event.imageUrl != null
-                  ? DecorationImage(
-                      image: NetworkImage(event.imageUrl!),
-                      fit: BoxFit.cover,
+          // Background Image with Hero Animation
+          Hero(
+            tag: 'event-${event.id}',
+            child: Container(
+              width: double.infinity,
+              height: 250.h,
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight,
+                image: event.imageUrl != null
+                    ? DecorationImage(
+                        image: NetworkImage(event.imageUrl!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+              ),
+              child: event.imageUrl == null
+                  ? Center(
+                      child: Icon(
+                        Icons.event,
+                        size: 80.r,
+                        color: AppColors.surface.withAlpha((0.5 * 255).round()),
+                      ),
                     )
                   : null,
             ),
-            child: event.imageUrl == null
-                ? Center(
-                    child: Icon(
-                      Icons.event,
-                      size: 80.r,
-                      color: AppColors.surface.withOpacity(0.5),
-                    ),
-                  )
-                : null,
           ),
 
-          // Gradient Overlay
+          // Enhanced Gradient Overlay
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withOpacity(0.6),
+                  Colors.black.withAlpha((0.7 * 255).round()),
                   Colors.transparent,
-                  Colors.black.withOpacity(0.8),
+                  Colors.black.withAlpha((0.85 * 255).round()),
                 ],
                 stops: const [0.0, 0.5, 1.0],
               ),
@@ -79,41 +86,67 @@ class EventHeader extends StatelessWidget {
             ),
           ),
 
-          // Event Type Badge
+          // Event Type Badge with Glassmorphism
           Positioned(
             top: 16.h,
             right: 16.w,
-            child: Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: 12.w,
-                vertical: 6.h,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
+            child: SafeArea(
+              child: GlassContainer(
+                blur: 15,
+                opacity: 0.2,
+                padding: EdgeInsets.symmetric(
+                  horizontal: 12.w,
+                  vertical: 6.h,
+                ),
                 borderRadius: BorderRadius.circular(20.r),
-              ),
-              child: Text(
-                event.eventType,
-                style: AppTextStyles.caption.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.primary.withAlpha((0.4 * 255).round()),
+                    AppColors.primary.withAlpha((0.3 * 255).round()),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6.r,
+                      height: 6.r,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    SizedBox(width: 6.w),
+                    Text(
+                      event.eventType,
+                      style: AppTextStyles.caption.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
 
-          // Status Badge
+          // Status Badge with Glassmorphism
           Positioned(
             bottom: 16.h,
             right: 16.w,
-            child: Container(
+            child: GlassContainer(
+              blur: 15,
+              opacity: 0.2,
               padding: EdgeInsets.symmetric(
                 horizontal: 12.w,
                 vertical: 6.h,
               ),
-              decoration: BoxDecoration(
-                color: _getStatusColor(event.status),
-                borderRadius: BorderRadius.circular(20.r),
+              borderRadius: BorderRadius.circular(20.r),
+              gradient: LinearGradient(
+                colors: [
+                  _getStatusColor(event.status).withAlpha((0.4 * 255).round()),
+                  _getStatusColor(event.status).withAlpha((0.3 * 255).round()),
+                ],
               ),
               child: Text(
                 event.status,
@@ -168,22 +201,41 @@ class EventInfoSection extends StatelessWidget {
         ),
         SizedBox(height: AppSpacing.md),
 
-        // Date & Time
-        _InfoRow(
-          icon: Icons.calendar_today,
-          text: _formatDateRange(),
-        ),
-        SizedBox(height: AppSpacing.sm),
+        // Info Card with Glassmorphism
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16.r),
+            boxShadow: AppShadows.small(AppColors.isDarkMode),
+          ),
+          child: GlassContainer(
+            blur: 15,
+            opacity: 0.1,
+            borderRadius: BorderRadius.circular(16.r),
+            padding: EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              children: [
+                // Date & Time
+                _InfoRow(
+                  icon: Icons.calendar_today,
+                  iconColor: AppColors.primary,
+                  text: _formatDateRange(),
+                ),
+                SizedBox(height: AppSpacing.sm),
 
-        // Location
-        _InfoRow(
-          icon: Icons.location_on,
-          text: event.location,
-        ),
-        SizedBox(height: AppSpacing.md),
+                // Location
+                _InfoRow(
+                  icon: Icons.location_on,
+                  iconColor: AppColors.secondary,
+                  text: event.location,
+                ),
+                SizedBox(height: AppSpacing.md),
 
-        // Capacity Indicator
-        EventCapacityIndicator(event: event),
+                // Capacity Indicator
+                EventCapacityIndicator(event: event),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -198,10 +250,12 @@ class EventInfoSection extends StatelessWidget {
 class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String text;
+  final Color iconColor;
 
   const _InfoRow({
     required this.icon,
     required this.text,
+    required this.iconColor,
   });
 
   @override
@@ -211,7 +265,7 @@ class _InfoRow extends StatelessWidget {
         Icon(
           icon,
           size: 20.r,
-          color: AppColors.primary,
+          color: iconColor,
         ),
         SizedBox(width: 8.w),
         Expanded(
@@ -227,8 +281,8 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-/// Event Capacity Indicator with progress bar
-class EventCapacityIndicator extends StatelessWidget {
+/// Event Capacity Indicator with animated progress bar
+class EventCapacityIndicator extends StatefulWidget {
   final Event event;
 
   const EventCapacityIndicator({
@@ -237,10 +291,50 @@ class EventCapacityIndicator extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final percentage = event.capacity > 0
-        ? (event.attendeeCount / event.capacity).clamp(0.0, 1.0)
+  State<EventCapacityIndicator> createState() => _EventCapacityIndicatorState();
+}
+
+class _EventCapacityIndicatorState extends State<EventCapacityIndicator>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+
+    final percentage = widget.event.capacity > 0
+        ? (widget.event.attendeeCount / widget.event.capacity).clamp(0.0, 1.0)
         : 0.0;
+
+    _animation = Tween<double>(begin: 0.0, end: percentage).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final percentage = widget.event.capacity > 0
+        ? (widget.event.attendeeCount / widget.event.capacity).clamp(0.0, 1.0)
+        : 0.0;
+
+    final progressColor = widget.event.isFull
+        ? AppColors.error
+        : percentage > 0.8
+            ? AppColors.warning
+            : AppColors.primary;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -248,14 +342,24 @@ class EventCapacityIndicator extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Capacity',
-              style: AppTextStyles.bodyMedium.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+            Row(
+              children: [
+                Icon(
+                  Icons.people,
+                  size: 18.r,
+                  color: AppColors.textSecondary,
+                ),
+                SizedBox(width: 6.w),
+                Text(
+                  'Capacity',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
             Text(
-              '${event.attendeeCount} / ${event.capacity}',
+              '${widget.event.attendeeCount} / ${widget.event.capacity}',
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
                 fontWeight: FontWeight.w600,
@@ -264,28 +368,73 @@ class EventCapacityIndicator extends StatelessWidget {
           ],
         ),
         SizedBox(height: 8.h),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(10.r),
-          child: LinearProgressIndicator(
-            value: percentage,
-            minHeight: 8.h,
-            backgroundColor: AppColors.surface,
-            valueColor: AlwaysStoppedAnimation<Color>(
-              event.isFull ? AppColors.error : AppColors.primary,
-            ),
-          ),
+        // Animated Progress Bar
+        AnimatedBuilder(
+          animation: _animation,
+          builder: (context, child) {
+            return Stack(
+              children: [
+                Container(
+                  height: 10.h,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(10.r),
+                    border: Border.all(
+                      color: AppColors.border,
+                      width: 0.5,
+                    ),
+                  ),
+                ),
+                FractionallySizedBox(
+                  widthFactor: _animation.value,
+                  child: Container(
+                    height: 10.h,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          progressColor,
+                          progressColor.withAlpha((0.7 * 255).round()),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(10.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: progressColor.withAlpha((0.4 * 255).round()),
+                          blurRadius: 8.r,
+                          offset: Offset(0, 2.h),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
-        if (event.remainingSpots > 0 && event.remainingSpots <= 10)
+        if (widget.event.remainingSpots > 0 && widget.event.remainingSpots <= 10)
           Padding(
-            padding: EdgeInsets.only(top: 4.h),
-            child: Text(
-              'Only ${event.remainingSpots} spots left!',
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.warning,
-                fontWeight: FontWeight.w600,
-              ),
+            padding: EdgeInsets.only(top: 6.h),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 14.r,
+                  color: AppColors.warning,
+                ),
+                SizedBox(width: 4.w),
+                Text(
+                  'Only ${widget.event.remainingSpots} spots left!',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.warning,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-          ),
+          )
+              .animate()
+              .fadeIn(duration: 600.ms, delay: 400.ms)
+              .slideX(begin: -0.2, end: 0),
       ],
     );
   }
@@ -311,46 +460,69 @@ class _EventDescriptionState extends State<EventDescription> {
   Widget build(BuildContext context) {
     final maxLines = _isExpanded ? null : 3;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'About',
-          style: AppTextStyles.headingSmall.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        SizedBox(height: AppSpacing.sm),
-        Text(
-          widget.event.description,
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
-            height: 1.5,
-          ),
-          maxLines: maxLines,
-          overflow: _isExpanded ? null : TextOverflow.ellipsis,
-        ),
-        if (widget.event.description.length > 150)
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _isExpanded = !_isExpanded;
-              });
-            },
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.zero,
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: Text(
-              _isExpanded ? 'Show less' : 'Read more',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: AppShadows.small(AppColors.isDarkMode),
+      ),
+      child: GlassContainer(
+        blur: 15,
+        opacity: 0.1,
+        borderRadius: BorderRadius.circular(16.r),
+        padding: EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'About',
+              style: AppTextStyles.headingSmall.copyWith(
+                fontWeight: FontWeight.bold,
               ),
             ),
-          ),
-      ],
+            SizedBox(height: AppSpacing.sm),
+            Text(
+              widget.event.description,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+                height: 1.5,
+              ),
+              maxLines: maxLines,
+              overflow: _isExpanded ? null : TextOverflow.ellipsis,
+            ),
+            if (widget.event.description.length > 150)
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _isExpanded = !_isExpanded;
+                  });
+                },
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _isExpanded ? 'Show less' : 'Read more',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(width: 4.w),
+                    Icon(
+                      _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                      size: 18.r,
+                      color: AppColors.primary,
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -372,55 +544,78 @@ class EventOrganizerCard extends StatelessWidget {
     final displayName = hasName ? event.organizerName : 'Organizer';
 
     return Container(
-      padding: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(
-          color: AppColors.primaryLight.withOpacity(0.3),
-          width: 1,
-        ),
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: AppShadows.small(AppColors.isDarkMode),
       ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 24.r,
-            backgroundColor: AppColors.primary,
-            child: Text(
-              initial,
-              style: AppTextStyles.bodyLarge.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+      child: GlassContainer(
+        blur: 15,
+        opacity: 0.1,
+        borderRadius: BorderRadius.circular(16.r),
+        padding: EdgeInsets.all(AppSpacing.md),
+        child: Row(
+          children: [
+            // Avatar with gradient background
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.primary,
+                    AppColors.primary.withAlpha((0.7 * 255).round()),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withAlpha((0.3 * 255).round()),
+                    blurRadius: 8.r,
+                    offset: Offset(0, 4.h),
+                  ),
+                ],
+              ),
+              child: CircleAvatar(
+                radius: 28.r,
+                backgroundColor: Colors.transparent,
+                child: Text(
+                  initial,
+                  style: AppTextStyles.headingSmall.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
-          ),
-          SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Organized by',
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textSecondary,
+            SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Organized by',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
-                ),
-                SizedBox(height: 2.h),
-                Text(
-                  displayName,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
+                  SizedBox(height: 4.h),
+                  Text(
+                    displayName,
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Icon(
-            Icons.chevron_right,
-            size: 24.r,
-            color: AppColors.textSecondary,
-          ),
-        ],
+            Icon(
+              Icons.chevron_right,
+              size: 24.r,
+              color: AppColors.primary,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -459,92 +654,63 @@ class EventActionButtons extends StatelessWidget {
   Widget _buildRegisterButton() {
     final canRegister = !event.isFull && event.isUpcoming;
 
-    return SizedBox(
-      width: double.infinity,
-      height: 50.h,
-      child: ElevatedButton(
-        onPressed: canRegister && !isLoading ? onRegister : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: AppColors.textSecondary.withOpacity(0.3),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
-          ),
+    return ModernButton(
+      onPressed: canRegister && !isLoading ? onRegister : null,
+      isLoading: isLoading,
+      useGradient: true,
+      type: ModernButtonType.primary,
+      child: Text(
+        event.isFull ? 'Event Full' : 'Register Now',
+        style: AppTextStyles.bodyLarge.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
         ),
-        child: isLoading
-            ? SizedBox(
-                height: 20.h,
-                width: 20.w,
-                child: const CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
-            : Text(
-                event.isFull ? 'Event Full' : 'Register Now',
-                style: AppTextStyles.bodyLarge.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
       ),
     );
   }
 
   Widget _buildViewTicketButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 50.h,
-      child: ElevatedButton.icon(
-        onPressed: onViewTicket,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.success,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
+    return ModernButton(
+      onPressed: onViewTicket,
+      useGradient: true,
+      type: ModernButtonType.primary,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.qr_code, size: 24.r, color: Colors.white),
+          SizedBox(width: 8.w),
+          Text(
+            'View Ticket',
+            style: AppTextStyles.bodyLarge.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ),
-        icon: Icon(Icons.qr_code, size: 24.r),
-        label: Text(
-          'View Ticket',
-          style: AppTextStyles.bodyLarge.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildManageButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 50.h,
-      child: ElevatedButton(
-        onPressed: onManage,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.settings, size: 22.r, color: Colors.white),
-            SizedBox(width: 8.w),
-            Text(
-              'Manage Event',
-              style: AppTextStyles.bodyLarge.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-              ),
+    return ModernButton(
+      onPressed: onManage,
+      useGradient: true,
+      type: ModernButtonType.primary,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.settings, size: 22.r, color: Colors.white),
+          SizedBox(width: 8.w),
+          Text(
+            'Manage Event',
+            style: AppTextStyles.bodyLarge.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

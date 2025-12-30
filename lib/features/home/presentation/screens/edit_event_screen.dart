@@ -2,10 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/widgets/modern_text_field.dart';
+import '../../../../core/widgets/modern_button.dart';
+import '../../../../core/widgets/glass_container.dart';
+import '../../../../core/widgets/modern_dialog.dart';
 import '../../domain/entities/event.dart';
 import '../cubit/create_event_cubit.dart';
 import '../cubit/create_event_state.dart';
@@ -144,35 +150,46 @@ class _EditEventScreenState extends State<EditEventScreen> {
                   'No internet connection. Please check your network and try again.';
             }
 
-            showDialog(
+            showModernDialog(
               context: context,
-              builder: (dialogContext) => AlertDialog(
-                title: Row(
-                  children: [
-                    Icon(
-                      isNetworkError ? Icons.wifi_off : Icons.error_outline,
-                      color: AppColors.error,
-                    ),
-                    SizedBox(width: 8.w),
-                    const Text('Update Failed'),
-                  ],
-                ),
-                content: Text(errorMessage),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(dialogContext),
-                    child: const Text('Close'),
+              useGlass: true,
+              title: 'Update Failed',
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isNetworkError ? Icons.wifi_off : Icons.error_outline,
+                    color: AppColors.error,
+                    size: 48.r,
                   ),
-                  if (isServerError)
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(dialogContext);
-                        _submit(context);
-                      },
-                      child: const Text('Retry'),
+                  SizedBox(height: AppSpacing.md),
+                  Text(
+                    errorMessage,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
                     ),
+                    textAlign: TextAlign.center,
+                  ),
                 ],
               ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    'Close',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
+                if (isServerError)
+                  ModernButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _submit(context);
+                    },
+                    type: ModernButtonType.primary,
+                    child: const Text('Retry'),
+                  ),
+              ],
             );
           }
         },
@@ -189,81 +206,119 @@ class _EditEventScreenState extends State<EditEventScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextFormField(
+                  ModernTextField(
                     controller: _titleController,
-                    decoration: const InputDecoration(labelText: 'Title'),
+                    label: 'Event Title',
+                    hint: 'Enter event title',
+                    prefixIcon: Icon(Icons.event, color: AppColors.primary),
+                    useGlass: true,
                     validator: (value) =>
-                        value == null || value.isEmpty ? 'Required' : null,
+                        value == null || value.isEmpty ? 'Title is required' : null,
                   ),
                   SizedBox(height: AppSpacing.md),
-                  TextFormField(
+                  ModernTextField(
                     controller: _descriptionController,
-                    minLines: 3,
+                    label: 'Description',
+                    hint: 'Enter event description',
+                    prefixIcon: Icon(Icons.description, color: AppColors.primary),
+                    useGlass: true,
                     maxLines: 5,
-                    decoration: const InputDecoration(labelText: 'Description'),
                     validator: (value) =>
-                        value == null || value.isEmpty ? 'Required' : null,
+                        value == null || value.isEmpty ? 'Description is required' : null,
                   ),
                   SizedBox(height: AppSpacing.md),
-                  TextFormField(
+                  ModernTextField(
                     controller: _locationController,
-                    decoration: const InputDecoration(labelText: 'Location'),
+                    label: 'Location',
+                    hint: 'Enter event location',
+                    prefixIcon: Icon(Icons.location_on, color: AppColors.secondary),
+                    useGlass: true,
                     validator: (value) =>
-                        value == null || value.isEmpty ? 'Required' : null,
+                        value == null || value.isEmpty ? 'Location is required' : null,
                   ),
                   SizedBox(height: AppSpacing.md),
+                  // Date Time Pickers
                   Row(
                     children: [
                       Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => _pickDate(isStart: true),
-                          child: Text(
-                            'Start: ${_startDate.toLocal()}',
-                            style: TextStyle(fontSize: 14.sp),
-                          ),
+                        child: _buildDateTimePicker(
+                          label: 'Start Date & Time',
+                          dateTime: _startDate,
+                          icon: Icons.calendar_today,
+                          onTap: () => _pickDate(isStart: true),
                         ),
                       ),
                       SizedBox(width: AppSpacing.sm),
                       Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => _pickDate(isStart: false),
-                          child: Text(
-                            'End: ${_endDate.toLocal()}',
-                            style: TextStyle(fontSize: 14.sp),
-                          ),
+                        child: _buildDateTimePicker(
+                          label: 'End Date & Time',
+                          dateTime: _endDate,
+                          icon: Icons.event,
+                          onTap: () => _pickDate(isStart: false),
                         ),
                       ),
                     ],
                   ),
                   SizedBox(height: AppSpacing.md),
-                  DropdownButtonFormField<String>(
-                    value: _eventType,
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'PUBLIC',
-                        child: Text('Public'),
+                  // Visibility Dropdown
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16.r),
+                      boxShadow: AppShadows.small(AppColors.isDarkMode),
+                    ),
+                    child: GlassContainer(
+                      blur: 15,
+                      opacity: 0.1,
+                      borderRadius: BorderRadius.circular(16.r),
+                      padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                      child: DropdownButtonFormField<String>(
+                        value: _eventType,
+                        items: [
+                          DropdownMenuItem(
+                            value: 'PUBLIC',
+                            child: Row(
+                              children: [
+                                Icon(Icons.public, size: 20.r, color: AppColors.primary),
+                                SizedBox(width: 8.w),
+                                const Text('Public'),
+                              ],
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'PRIVATE',
+                            child: Row(
+                              children: [
+                                Icon(Icons.lock, size: 20.r, color: AppColors.secondary),
+                                SizedBox(width: 8.w),
+                                const Text('Private'),
+                              ],
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() => _eventType = value);
+                          }
+                        },
+                        decoration: InputDecoration(
+                          labelText: 'Event Visibility',
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+                        ),
                       ),
-                      DropdownMenuItem(
-                        value: 'PRIVATE',
-                        child: Text('Private'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() => _eventType = value);
-                      }
-                    },
-                    decoration:
-                        const InputDecoration(labelText: 'Visibility'),
+                    ),
                   ),
                   SizedBox(height: AppSpacing.md),
-                  TextFormField(
+                  ModernTextField(
                     controller: _capacityController,
+                    label: 'Capacity',
+                    hint: 'Enter maximum attendees',
+                    prefixIcon: Icon(Icons.people, color: AppColors.primary),
+                    useGlass: true,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Capacity'),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Required';
+                        return 'Capacity is required';
                       }
                       final parsed = int.tryParse(value);
                       if (parsed == null || parsed <= 0) {
@@ -272,48 +327,86 @@ class _EditEventScreenState extends State<EditEventScreen> {
                       return null;
                     },
                   ),
-                  SizedBox(height: AppSpacing.lg),
+                  SizedBox(height: AppSpacing.xl),
+                  // Submit Button
                   BlocBuilder<CreateEventCubit, CreateEventState>(
                     builder: (context, state) {
                       final isLoading = state is CreateEventSubmitting;
-                      return SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed:
-                              isLoading ? null : () => _submit(context),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            padding:
-                                EdgeInsets.symmetric(vertical: AppSpacing.md),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.r),
+                      return ModernButton(
+                        onPressed: isLoading ? null : () => _submit(context),
+                        isLoading: isLoading,
+                        useGradient: true,
+                        type: ModernButtonType.primary,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.save, size: 22.r, color: Colors.white),
+                            SizedBox(width: 8.w),
+                            Text(
+                              'Save Changes',
+                              style: AppTextStyles.bodyLarge.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                          ),
-                          child: isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor:
-                                        AlwaysStoppedAnimation(Colors.white),
-                                  ),
-                                )
-                              : Text(
-                                  'Save Changes',
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
+                          ],
                         ),
                       );
                     },
                   ),
+                  SizedBox(height: AppSpacing.xl),
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateTimePicker({
+    required String label,
+    required DateTime dateTime,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16.r),
+          boxShadow: AppShadows.small(AppColors.isDarkMode),
+        ),
+        child: GlassContainer(
+          blur: 15,
+          opacity: 0.1,
+          borderRadius: BorderRadius.circular(16.r),
+          padding: EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(icon, size: 18.r, color: AppColors.primary),
+                  SizedBox(width: 6.w),
+                  Text(
+                    label,
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                DateFormat('MMM dd, yyyy • HH:mm').format(dateTime),
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
       ),

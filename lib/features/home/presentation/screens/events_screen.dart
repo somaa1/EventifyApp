@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/modern_bottom_sheet.dart';
+import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/router/app_router.dart';
 import '../../domain/entities/event_filter.dart';
 import '../cubit/events_cubit.dart';
@@ -195,181 +197,143 @@ class _EventsScreenState extends State<EventsScreen> {
   }
 
   void _showFilterBottomSheet(BuildContext context) {
-    showModalBottomSheet(
+    showModernBottomSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (bottomSheetContext) => BlocProvider.value(
+      useGlass: true,
+      title: 'Filters',
+      height: MediaQuery.of(context).size.height * 0.7,
+      child: BlocProvider.value(
         value: context.read<EventsCubit>(),
-        child: Container(
-          height: MediaQuery.of(context).size.height * 0.7,
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20.r),
-              topRight: Radius.circular(20.r),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Clear all button
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  context.read<EventsCubit>().clearFilters();
+                  Navigator.pop(context);
+                },
+                child: Text(
+                  'Clear All',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
             ),
-          ),
-          child: Column(
-            children: [
-              // Handle
-              Container(
-                margin: EdgeInsets.only(top: 12.h),
-                width: 40.w,
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: AppColors.borderColor,
-                  borderRadius: BorderRadius.circular(2.r),
-                ),
-              ),
-              // Header
-              Padding(
-                padding: EdgeInsets.all(AppSpacing.lg),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Filters',
-                      style: AppTextStyles.headingMedium.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        context.read<EventsCubit>().clearFilters();
-                        Navigator.pop(context);
-                      },
-                      child: Text(
-                        'Clear All',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Filter options
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Event Type
-                      Text(
-                        'Event Type',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(height: AppSpacing.sm),
-                      BlocBuilder<EventsCubit, EventsState>(
-                        builder: (context, state) {
-                          final activeFilter = _getActiveFilter(state);
-                          final selectedType = activeFilter.eventType;
-
-                          return Wrap(
-                            spacing: 8.w,
-                            runSpacing: 8.h,
-                            children: [
-                              'All',
-                              'CONFERENCE',
-                              'WORKSHOP',
-                              'MEETUP',
-                              'SEMINAR',
-                              'WEBINAR'
-                            ]
-                                .map((type) => FilterChip(
-                                      label: Text(type),
-                                      selected: type == 'All'
-                                          ? selectedType == null
-                                          : selectedType == type,
-                                      onSelected: (selected) {
-                                        final newType =
-                                            type == 'All' ? null : type;
-                                        final newFilter = activeFilter.copyWith(
-                                            eventType: newType);
-                                        context
-                                            .read<EventsCubit>()
-                                            .applyFilter(newFilter);
-                                        Navigator.pop(
-                                            context); // Close filter sheet
-                                      },
-                                      selectedColor:
-                                          AppColors.primary.withOpacity(0.2),
-                                      labelStyle: AppTextStyles.bodySmall.copyWith(
-                                        color: (type == 'All'
-                                                ? selectedType == null
-                                                : selectedType == type)
-                                            ? AppColors.primary
-                                            : AppColors.textSecondary,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ))
-                                .toList(),
-                          );
-                        },
-                      ),
-                      SizedBox(height: AppSpacing.lg),
-                      // Show Past Events
-                      BlocBuilder<EventsCubit, EventsState>(
-                        builder: (context, state) {
-                          final activeFilter = _getActiveFilter(state);
-
-                          return SwitchListTile(
-                            title: Text(
-                              'Show Past Events',
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            value: activeFilter.showPastEvents,
-                            onChanged: (value) {
-                              final newFilter =
-                                  activeFilter.copyWith(showPastEvents: value);
-                              context.read<EventsCubit>().applyFilter(newFilter);
-                            },
-                            activeColor: AppColors.primary,
-                            contentPadding: EdgeInsets.zero,
-                          );
-                        },
-                      ),
-                      SizedBox(height: AppSpacing.lg),
-                    ],
+            // Filter options
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Event Type
+                Text(
+                  'Event Type',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
                   ),
                 ),
-              ),
-              // Apply button
-              Padding(
-                padding: EdgeInsets.all(AppSpacing.lg),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
+                SizedBox(height: AppSpacing.sm),
+                BlocBuilder<EventsCubit, EventsState>(
+                  builder: (context, state) {
+                    final activeFilter = _getActiveFilter(state);
+                    final selectedType = activeFilter.eventType;
+
+                    return Wrap(
+                      spacing: 8.w,
+                      runSpacing: 8.h,
+                      children: [
+                        'All',
+                        'CONFERENCE',
+                        'WORKSHOP',
+                        'MEETUP',
+                        'SEMINAR',
+                        'WEBINAR'
+                      ]
+                          .map((type) => GlassContainer(
+                                blur: 10,
+                                opacity: (type == 'All'
+                                        ? selectedType == null
+                                        : selectedType == type)
+                                    ? 0.15
+                                    : 0.05,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 16.w,
+                                  vertical: 10.h,
+                                ),
+                                borderRadius: BorderRadius.circular(20.r),
+                                child: InkWell(
+                                  onTap: () {
+                                    final newType = type == 'All' ? null : type;
+                                    final newFilter =
+                                        activeFilter.copyWith(eventType: newType);
+                                    context
+                                        .read<EventsCubit>()
+                                        .applyFilter(newFilter);
+                                    Navigator.pop(context);
+                                  },
+                                  child: Text(
+                                    type,
+                                    style: AppTextStyles.bodySmall.copyWith(
+                                      color: (type == 'All'
+                                              ? selectedType == null
+                                              : selectedType == type)
+                                          ? AppColors.primary
+                                          : AppColors.textSecondary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ))
+                          .toList(),
+                    );
+                  },
+                ),
+                SizedBox(height: AppSpacing.lg),
+                // Show Past Events
+                GlassContainer(
+                  blur: 10,
+                  opacity: 0.05,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.xs,
+                  ),
+                  borderRadius: BorderRadius.circular(12.r),
+                  child: BlocBuilder<EventsCubit, EventsState>(
+                    builder: (context, state) {
+                      final activeFilter = _getActiveFilter(state);
+
+                      return SwitchListTile(
+                        title: Text(
+                          'Show Past Events',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        value: activeFilter.showPastEvents,
+                        onChanged: (value) {
+                          final newFilter =
+                              activeFilter.copyWith(showPastEvents: value);
+                          context.read<EventsCubit>().applyFilter(newFilter);
+                        },
+                        activeTrackColor:
+                            AppColors.primary.withAlpha((0.5 * 255).round()),
+                        thumbColor: WidgetStateProperty.resolveWith((states) =>
+                            states.contains(WidgetState.selected)
+                                ? AppColors.primary
+                                : AppColors.textDisabled),
+                        contentPadding: EdgeInsets.zero,
+                      );
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                    ),
-                    child: Text(
-                      'Apply Filters',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
       ),
     );

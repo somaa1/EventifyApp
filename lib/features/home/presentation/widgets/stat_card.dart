@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/widgets/glass_container.dart';
 
-/// Card widget for displaying statistics
-class StatCard extends StatelessWidget {
+/// Modern card widget for displaying statistics with glassmorphism
+class StatCard extends StatefulWidget {
   final String title;
   final String value;
   final IconData icon;
@@ -22,61 +25,93 @@ class StatCard extends StatelessWidget {
   });
 
   @override
+  State<StatCard> createState() => _StatCardState();
+}
+
+class _StatCardState extends State<StatCard> {
+  bool _isPressed = false;
+
+  @override
   Widget build(BuildContext context) {
+    final effectiveIconColor = widget.iconColor ?? AppColors.primary;
+
     return GestureDetector(
-      onTap: onTap,
+      onTapDown: widget.onTap != null ? (_) => setState(() => _isPressed = true) : null,
+      onTapUp: widget.onTap != null
+          ? (_) {
+              setState(() => _isPressed = false);
+              widget.onTap?.call();
+            }
+          : null,
+      onTapCancel: widget.onTap != null ? () => setState(() => _isPressed = false) : null,
       child: Container(
-        padding: EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(
-            color: AppColors.borderColor,
-            width: 1.w,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10.r,
-              offset: Offset(0, 2.h),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(16.r),
+          boxShadow: AppShadows.small(AppColors.isDarkMode),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Icon
-            Container(
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: (iconColor ?? AppColors.primary).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8.r),
+        child: GlassContainer(
+          blur: 15,
+          opacity: 0.1,
+          borderRadius: BorderRadius.circular(16.r),
+          padding: EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Icon with gradient background
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      effectiveIconColor.withAlpha((0.2 * 255).round()),
+                      effectiveIconColor.withAlpha((0.1 * 255).round()),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: effectiveIconColor.withAlpha((0.2 * 255).round()),
+                      blurRadius: 8.r,
+                      offset: Offset(0, 4.h),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  widget.icon,
+                  size: 28.w,
+                  color: effectiveIconColor,
+                ),
               ),
-              child: Icon(
-                icon,
-                size: 24.w,
-                color: iconColor ?? AppColors.primary,
+              SizedBox(height: AppSpacing.md),
+              // Value with animation
+              Text(
+                widget.value,
+                style: AppTextStyles.headingLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                  fontSize: 28.sp,
+                ),
               ),
-            ),
-            SizedBox(height: AppSpacing.sm),
-            // Value
-            Text(
-              value,
-              style: AppTextStyles.headingMedium.copyWith(
-                fontWeight: FontWeight.bold,
+              SizedBox(height: 4.h),
+              // Title
+              Text(
+                widget.title,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-            SizedBox(height: 4.h),
-            // Title
-            Text(
-              title,
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    );
+    )
+        .animate(target: _isPressed ? 1 : 0)
+        .scale(begin: const Offset(1, 1), end: const Offset(0.95, 0.95));
   }
 }

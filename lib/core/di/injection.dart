@@ -59,6 +59,12 @@ import '../../features/invitations/data/repositories/invitation_repository_impl.
 import '../../features/invitations/domain/repositories/invitation_repository.dart';
 import '../../features/invitations/domain/usecases/send_invitation_usecase.dart';
 import '../../features/invitations/presentation/cubit/invitation_cubit.dart';
+import '../theme/data/datasources/theme_local_datasource.dart';
+import '../theme/data/repositories/theme_repository_impl.dart';
+import '../theme/domain/repositories/theme_repository.dart';
+import '../theme/domain/usecases/get_theme_mode_usecase.dart';
+import '../theme/domain/usecases/save_theme_mode_usecase.dart';
+import '../theme/cubit/theme_cubit.dart';
 
 final getIt = GetIt.instance;
 
@@ -78,6 +84,9 @@ Future<void> initializeDependencies() async {
 
   await getIt.allReady();
 
+  // Theme Feature - register early for use throughout the app
+  _registerThemeDependencies();
+
   // Auth Feature - MUST be registered FIRST
   // because Dio's AuthInterceptor depends on AuthLocalDataSource
   _registerAuthDependencies();
@@ -96,6 +105,32 @@ Future<void> initializeDependencies() async {
 
   // Invitation Feature
   _registerInvitationDependencies();
+}
+
+void _registerThemeDependencies() {
+  // Data Sources
+  getIt.registerLazySingleton<ThemeLocalDataSource>(
+    () => ThemeLocalDataSource(getIt<SharedPreferences>()),
+  );
+
+  // Repository
+  getIt.registerLazySingleton<ThemeRepository>(
+    () => ThemeRepositoryImpl(getIt<ThemeLocalDataSource>()),
+  );
+
+  // Use Cases
+  getIt.registerLazySingleton(
+    () => GetThemeModeUseCase(getIt<ThemeRepository>()),
+  );
+
+  getIt.registerLazySingleton(
+    () => SaveThemeModeUseCase(getIt<ThemeRepository>()),
+  );
+
+  // Cubit - Singleton to maintain theme state across the app
+  getIt.registerLazySingleton(
+    () => ThemeCubit(getIt<ThemeRepository>()),
+  );
 }
 
 void _registerAuthDependencies() {

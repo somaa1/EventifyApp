@@ -78,6 +78,9 @@ dependencies:
   share_plus: ^7.0.0
   path_provider: ^2.1.0
   pdf: ^3.10.0
+  vibration: ^2.0.0
+  dynamic_color: ^1.7.0
+  device_info_plus: ^10.1.2
 
   # Dependency Injection
   get_it: ^8.0.2

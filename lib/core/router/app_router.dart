@@ -3,36 +3,153 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/di/injection.dart';
-import '../../features/splash/presentation/splash_screen.dart';
-import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
+import '../constants/app_constants.dart';
+
+// Auth screens
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/otp_verification_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
+
+// Onboarding & Splash
+import '../../features/splash/presentation/splash_screen.dart';
+import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
+
+// Home screens
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/home/presentation/screens/events_screen.dart';
 import '../../features/home/presentation/screens/event_details_screen.dart';
 import '../../features/home/presentation/screens/my_events_screen.dart';
 import '../../features/home/presentation/screens/calendar_screen.dart';
+import '../../features/home/presentation/screens/create_event_screen.dart';
+import '../../features/home/presentation/screens/edit_event_screen.dart';
+import '../../features/home/presentation/screens/event_management_screen.dart';
+import '../../features/home/presentation/screens/attendee_list_screen.dart';
 import '../../features/home/presentation/cubit/events_cubit.dart';
+import '../../features/home/domain/entities/event.dart';
+
+// Invitations
+import '../../features/invitations/presentation/screens/send_invitation_screen.dart';
+
+// Profile screens
+import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/profile/presentation/screens/edit_profile_screen.dart';
+import '../../features/profile/domain/entities/user_profile.dart';
+
+// Settings
+import '../../features/settings/presentation/screens/settings_screen.dart';
+
+// Admin screens
+import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
+import '../../features/admin/presentation/screens/admin_events_screen.dart';
+
+// Registration & Tickets
 import '../../features/registration/presentation/screens/qr_ticket_screen.dart';
+
+// Attendance
 import '../../features/attendance/presentation/screens/qr_scanner_screen.dart';
 import '../../features/attendance/presentation/screens/attendance_success_screen.dart';
 import '../../features/attendance/presentation/screens/attendance_error_screen.dart';
 import '../../features/attendance/domain/entities/attendance.dart';
-import '../../features/home/presentation/screens/create_event_screen.dart';
-import '../../features/home/presentation/screens/event_management_screen.dart';
-import '../../features/home/presentation/screens/edit_event_screen.dart';
-import '../../features/invitations/presentation/screens/send_invitation_screen.dart';
-import '../../features/home/domain/entities/event.dart';
-import '../../features/home/presentation/screens/attendee_list_screen.dart';
-import '../../features/profile/presentation/screens/profile_screen.dart';
-import '../../features/profile/presentation/screens/edit_profile_screen.dart';
-import '../../features/settings/presentation/screens/settings_screen.dart';
-import '../../features/profile/domain/entities/user_profile.dart';
-import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
-import '../../features/admin/presentation/screens/admin_events_screen.dart';
-import '../constants/app_constants.dart';
+
+// Custom page transition builders
+class PageTransitions {
+  // Smooth slide from right with fade (for navigation)
+  static Widget slideFromRight(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(1.0, 0.0),
+        end: Offset.zero,
+      ).animate(CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      )),
+      child: FadeTransition(
+        opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(
+            parent: animation,
+            curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+          ),
+        ),
+        child: child,
+      ),
+    );
+  }
+
+  // Scale with fade (for modal-style screens)
+  static Widget scaleWithFade(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return ScaleTransition(
+      scale: Tween<double>(begin: 0.92, end: 1.0).animate(
+        CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        ),
+      ),
+      child: FadeTransition(
+        opacity: animation,
+        child: child,
+      ),
+    );
+  }
+
+  // Slide from bottom (for bottom sheets and modals)
+  static Widget slideFromBottom(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(0.0, 1.0),
+        end: Offset.zero,
+      ).animate(CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      )),
+      child: FadeTransition(
+        opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(
+            parent: animation,
+            curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
+          ),
+        ),
+        child: child,
+      ),
+    );
+  }
+
+  // Smooth fade (for simple transitions)
+  static Widget fade(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return FadeTransition(
+      opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeInOut,
+        ),
+      ),
+      child: child,
+    );
+  }
+}
 
 class AppRouter {
   static const String splash = '/';
@@ -70,9 +187,7 @@ class AppRouter {
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
           child: const SplashScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
+          transitionsBuilder: PageTransitions.fade,
         ),
       ),
       GoRoute(
@@ -81,18 +196,7 @@ class AppRouter {
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
           child: const OnboardingScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(1.0, 0.0),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeInOut,
-              )),
-              child: child,
-            );
-          },
+          transitionsBuilder: PageTransitions.slideFromRight,
         ),
       ),
       GoRoute(
@@ -101,21 +205,7 @@ class AppRouter {
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
           child: const LoginScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(1.0, 0.0),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeInOut,
-              )),
-              child: FadeTransition(
-                opacity: animation,
-                child: child,
-              ),
-            );
-          },
+          transitionsBuilder: PageTransitions.slideFromRight,
         ),
       ),
       GoRoute(
@@ -124,21 +214,7 @@ class AppRouter {
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
           child: const RegisterScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(1.0, 0.0),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeInOut,
-              )),
-              child: FadeTransition(
-                opacity: animation,
-                child: child,
-              ),
-            );
-          },
+          transitionsBuilder: PageTransitions.slideFromRight,
         ),
       ),
       GoRoute(
@@ -149,21 +225,7 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: OtpVerificationScreen(email: email),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(1.0, 0.0),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeInOut,
-                )),
-                child: FadeTransition(
-                  opacity: animation,
-                  child: child,
-                ),
-              );
-            },
+            transitionsBuilder: PageTransitions.slideFromRight,
           );
         },
       ),
@@ -173,21 +235,7 @@ class AppRouter {
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
           child: const ForgotPasswordScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(1.0, 0.0),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeInOut,
-              )),
-              child: FadeTransition(
-                opacity: animation,
-                child: child,
-              ),
-            );
-          },
+          transitionsBuilder: PageTransitions.slideFromRight,
         ),
       ),
       GoRoute(
@@ -196,12 +244,7 @@ class AppRouter {
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
           child: const HomeScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(
-              opacity: animation,
-              child: child,
-            );
-          },
+          transitionsBuilder: PageTransitions.fade,
         ),
       ),
       GoRoute(
@@ -213,21 +256,7 @@ class AppRouter {
             create: (_) => getIt<EventsCubit>()..loadEvents(),
             child: const EventsScreen(),
           ),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(1.0, 0.0),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeInOut,
-              )),
-              child: FadeTransition(
-                opacity: animation,
-                child: child,
-              ),
-            );
-          },
+          transitionsBuilder: PageTransitions.slideFromRight,
         ),
       ),
       GoRoute(
@@ -238,21 +267,7 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: EventDetailsScreen(eventId: id),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(1.0, 0.0),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeInOut,
-                )),
-                child: FadeTransition(
-                  opacity: animation,
-                  child: child,
-                ),
-              );
-            },
+            transitionsBuilder: PageTransitions.slideFromRight,
           );
         },
       ),
@@ -262,21 +277,7 @@ class AppRouter {
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
           child: const MyEventsScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(1.0, 0.0),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeInOut,
-              )),
-              child: FadeTransition(
-                opacity: animation,
-                child: child,
-              ),
-            );
-          },
+          transitionsBuilder: PageTransitions.slideFromRight,
         ),
       ),
       GoRoute(
@@ -285,21 +286,7 @@ class AppRouter {
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
           child: const CalendarScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(1.0, 0.0),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeInOut,
-              )),
-              child: FadeTransition(
-                opacity: animation,
-                child: child,
-              ),
-            );
-          },
+          transitionsBuilder: PageTransitions.slideFromRight,
         ),
       ),
       GoRoute(
@@ -310,21 +297,7 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: QrTicketScreen(registrationToken: token),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0.0, 1.0),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeInOut,
-                )),
-                child: FadeTransition(
-                  opacity: animation,
-                  child: child,
-                ),
-              );
-            },
+            transitionsBuilder: PageTransitions.slideFromBottom,
           );
         },
       ),
@@ -334,9 +307,7 @@ class AppRouter {
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
           child: const CreateEventScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
+          transitionsBuilder: PageTransitions.scaleWithFade,
         ),
       ),
       GoRoute(
@@ -347,9 +318,7 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: EditEventScreen(event: event),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
+            transitionsBuilder: PageTransitions.scaleWithFade,
           );
         },
       ),
@@ -359,9 +328,7 @@ class AppRouter {
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
           child: const EventManagementScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
+          transitionsBuilder: PageTransitions.slideFromRight,
         ),
       ),
       GoRoute(
@@ -372,9 +339,7 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: SendInvitationScreen(eventId: id),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
+            transitionsBuilder: PageTransitions.scaleWithFade,
           );
         },
       ),
@@ -386,9 +351,7 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: AttendeeListScreen(eventId: id),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
+            transitionsBuilder: PageTransitions.slideFromRight,
           );
         },
       ),
@@ -398,9 +361,7 @@ class AppRouter {
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
           child: const ProfileScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
+          transitionsBuilder: PageTransitions.fade,
         ),
       ),
       GoRoute(
@@ -411,9 +372,7 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: EditProfileScreen(profile: profile),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
+            transitionsBuilder: PageTransitions.scaleWithFade,
           );
         },
       ),
@@ -423,9 +382,7 @@ class AppRouter {
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
           child: const SettingsScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
+          transitionsBuilder: PageTransitions.scaleWithFade,
         ),
       ),
       GoRoute(
@@ -434,21 +391,7 @@ class AppRouter {
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
           child: const QrScannerScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0.0, 1.0),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeInOut,
-              )),
-              child: FadeTransition(
-                opacity: animation,
-                child: child,
-              ),
-            );
-          },
+          transitionsBuilder: PageTransitions.slideFromBottom,
         ),
       ),
       GoRoute(
@@ -459,9 +402,7 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: AttendanceSuccessScreen(attendance: attendance),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
+            transitionsBuilder: PageTransitions.scaleWithFade,
           );
         },
       ),
@@ -471,9 +412,7 @@ class AppRouter {
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
           child: const AdminDashboardScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
+          transitionsBuilder: PageTransitions.fade,
         ),
       ),
       GoRoute(
@@ -482,9 +421,7 @@ class AppRouter {
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
           child: const AdminEventsScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
+          transitionsBuilder: PageTransitions.slideFromRight,
         ),
       ),
       GoRoute(
@@ -495,9 +432,7 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: AttendanceErrorScreen(message: message),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
+            transitionsBuilder: PageTransitions.scaleWithFade,
           );
         },
       ),

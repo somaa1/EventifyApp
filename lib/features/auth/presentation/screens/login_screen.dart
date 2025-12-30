@@ -73,10 +73,10 @@ class _LoginScreenState extends State<LoginScreen> {
               if (state is AuthAuthenticated) {
                 // Show success message
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Login successful!'),
+                  SnackBar(
+                    content: const Text('Login successful!'),
                     backgroundColor: AppColors.success,
-                    duration: Duration(seconds: 1),
+                    duration: const Duration(seconds: 1),
                   ),
                 );
                 // Navigate to home screen

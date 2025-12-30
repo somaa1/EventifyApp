@@ -8,6 +8,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/modern_dialog.dart';
 import '../cubit/event_details_cubit.dart';
 import '../cubit/event_details_state.dart';
 import '../widgets/event_details_widgets.dart';
@@ -222,30 +223,26 @@ class EventDetailsScreen extends StatelessWidget {
           Navigator.of(dialogContext).pop();
 
           // Show loading dialog
-          showDialog(
+          showModernDialog(
             context: context,
             barrierDismissible: false,
-            builder: (loadingContext) => Center(
-              child: Container(
-                padding: EdgeInsets.all(AppSpacing.xl),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16.r),
+            useGlass: true,
+            title: 'Registering',
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                    ),
-                    SizedBox(height: AppSpacing.md),
-                    Text(
-                      'Registering...',
-                      style: AppTextStyles.bodyMedium,
-                    ),
-                  ],
+                SizedBox(height: AppSpacing.md),
+                Text(
+                  'Please wait while we register you for this event...',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-              ),
+              ],
             ),
           );
 

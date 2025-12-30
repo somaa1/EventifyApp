@@ -39,8 +39,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (_formKey.currentState!.validate()) {
       // TODO: Implement forgot password functionality when backend endpoint is ready
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password reset feature coming soon!'),
+        SnackBar(
+          content: const Text('Password reset feature coming soon!'),
           backgroundColor: AppColors.info,
         ),
       );

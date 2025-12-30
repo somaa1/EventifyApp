@@ -20,7 +20,7 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
 
-  final List<OnboardingPageData> pages = const [
+  final List<OnboardingPageData> pages =  [
     OnboardingPageData(
       title: 'Discover Events',
       description:

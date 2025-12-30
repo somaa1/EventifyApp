@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_shadows.dart';
+import '../../../../core/widgets/glass_container.dart';
+import '../../../../core/widgets/modern_dialog.dart';
+import '../../../../core/widgets/modern_button.dart';
 import '../cubit/event_management_cubit.dart';
 import '../cubit/event_management_state.dart';
 import '../../domain/entities/event.dart';
@@ -15,22 +20,58 @@ class EventManagementScreen extends StatelessWidget {
   const EventManagementScreen({super.key});
 
   void _confirmDelete(BuildContext context, String id) async {
-    final confirm = await showDialog<bool>(
+    final confirm = await showModernDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Event'),
-        content: const Text('Are you sure you want to delete this event?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
+      useGlass: true,
+      title: 'Delete Event',
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.warning_amber_rounded,
+            color: AppColors.error,
+            size: 48.r,
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Delete'),
+          SizedBox(height: AppSpacing.md),
+          Text(
+            'Are you sure you want to delete this event?',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: AppSpacing.sm),
+          Text(
+            'This action cannot be undone.',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.error,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text(
+            'Cancel',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+        ),
+        ModernButton(
+          onPressed: () => Navigator.pop(context, true),
+          type: ModernButtonType.danger,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.delete, size: 18.r, color: Colors.white),
+              SizedBox(width: 6.w),
+              const Text('Delete'),
+            ],
+          ),
+        ),
+      ],
     );
 
     if (confirm == true) {
@@ -155,7 +196,7 @@ class EventManagementScreen extends StatelessWidget {
   }
 }
 
-class _EventTile extends StatelessWidget {
+class _EventTile extends StatefulWidget {
   final Event event;
   final bool isDeleting;
   final VoidCallback onEdit;
@@ -173,41 +214,60 @@ class _EventTile extends StatelessWidget {
   });
 
   @override
+  State<_EventTile> createState() => _EventTileState();
+}
+
+class _EventTileState extends State<_EventTile> {
+  bool _isPressed = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      margin: EdgeInsets.only(bottom: AppSpacing.md),
-      elevation: 2,
-      child: Padding(
-        padding: EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: Container(
+        margin: EdgeInsets.only(bottom: AppSpacing.md),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16.r),
+          boxShadow: AppShadows.medium(AppColors.isDarkMode),
+        ),
+        child: GlassContainer(
+          blur: 15,
+          opacity: 0.1,
+          borderRadius: BorderRadius.circular(16.r),
+          padding: EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // Event title and type
             Row(
               children: [
                 Expanded(
                   child: Text(
-                    event.title,
+                    widget.event.title,
                     style: AppTextStyles.headingSmall.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
-                Container(
+                GlassContainer(
+                  blur: 10,
+                  opacity: 0.15,
                   padding: EdgeInsets.symmetric(
-                    horizontal: 8.w,
-                    vertical: 4.h,
+                    horizontal: 10.w,
+                    vertical: 5.h,
                   ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12.r),
+                  borderRadius: BorderRadius.circular(12.r),
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primary.withAlpha((0.3 * 255).round()),
+                      AppColors.primary.withAlpha((0.2 * 255).round()),
+                    ],
                   ),
                   child: Text(
-                    event.eventType,
-                    style: AppTextStyles.bodySmall.copyWith(
+                    widget.event.eventType,
+                    style: AppTextStyles.caption.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w700,
                     ),
@@ -219,7 +279,7 @@ class _EventTile extends StatelessWidget {
 
             // Description
             Text(
-              event.description,
+              widget.event.description,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.bodySmall.copyWith(
@@ -232,11 +292,11 @@ class _EventTile extends StatelessWidget {
             Row(
               children: [
                 Icon(Icons.location_on,
-                    size: 14.r, color: AppColors.textSecondary),
+                    size: 16.r, color: AppColors.secondary),
                 SizedBox(width: 4.w),
                 Expanded(
                   child: Text(
-                    event.location,
+                    widget.event.location,
                     style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -245,12 +305,13 @@ class _EventTile extends StatelessWidget {
                   ),
                 ),
                 SizedBox(width: 8.w),
-                Icon(Icons.people, size: 14.r, color: AppColors.textSecondary),
+                Icon(Icons.people, size: 16.r, color: AppColors.primary),
                 SizedBox(width: 4.w),
                 Text(
-                  '${event.attendeeCount ?? 0}/${event.capacity}',
+                  '${widget.event.attendeeCount ?? 0}/${widget.event.capacity}',
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -259,34 +320,34 @@ class _EventTile extends StatelessWidget {
 
             // Action buttons - RESPONSIVE WRAP LAYOUT
             Wrap(
-              spacing: 4.w,
-              runSpacing: 4.h,
+              spacing: 6.w,
+              runSpacing: 6.h,
               alignment: WrapAlignment.end,
               children: [
                 _ActionButton(
                   icon: Icons.mail_outline,
                   label: 'Invite',
-                  onPressed: isDeleting ? null : onInvite,
+                  onPressed: widget.isDeleting ? null : widget.onInvite,
                   color: AppColors.info,
                 ),
                 _ActionButton(
                   icon: Icons.group,
                   label: 'Attendees',
-                  onPressed: isDeleting ? null : onAttendees,
+                  onPressed: widget.isDeleting ? null : widget.onAttendees,
                   color: AppColors.secondary,
                 ),
                 _ActionButton(
                   icon: Icons.edit,
                   label: 'Edit',
-                  onPressed: isDeleting ? null : onEdit,
+                  onPressed: widget.isDeleting ? null : widget.onEdit,
                   color: AppColors.primary,
                 ),
                 _ActionButton(
                   icon: Icons.delete_outline,
                   label: 'Delete',
-                  onPressed: isDeleting ? null : onDelete,
+                  onPressed: widget.isDeleting ? null : widget.onDelete,
                   color: AppColors.error,
-                  isLoading: isDeleting,
+                  isLoading: widget.isDeleting,
                   isDangerous: true,
                 ),
               ],
@@ -294,7 +355,10 @@ class _EventTile extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ),
+    )
+        .animate(target: _isPressed ? 1 : 0)
+        .scale(begin: const Offset(1, 1), end: const Offset(0.98, 0.98));
   }
 }
 
@@ -318,33 +382,59 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 32.h,
-      child: OutlinedButton.icon(
-        onPressed: onPressed,
-        icon: isLoading
-            ? SizedBox(
-                width: 14.w,
-                height: 14.h,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(color),
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        height: 32.h,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20.r),
+          boxShadow: isDangerous
+              ? [
+                  BoxShadow(
+                    color: color.withAlpha((0.3 * 255).round()),
+                    blurRadius: 4.r,
+                    offset: Offset(0, 2.h),
+                  ),
+                ]
+              : null,
+        ),
+        child: GlassContainer(
+          blur: 10,
+          opacity: isDangerous ? 0.15 : 0.08,
+          borderRadius: BorderRadius.circular(20.r),
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+          gradient: isDangerous
+              ? LinearGradient(
+                  colors: [
+                    color.withAlpha((0.2 * 255).round()),
+                    color.withAlpha((0.1 * 255).round()),
+                  ],
+                )
+              : null,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isLoading)
+                SizedBox(
+                  width: 14.w,
+                  height: 14.h,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(color),
+                  ),
+                )
+              else
+                Icon(icon, size: 16.r, color: color),
+              SizedBox(width: 6.w),
+              Text(
+                label,
+                style: AppTextStyles.caption.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w600,
                 ),
-              )
-            : Icon(icon, size: 16.r),
-        label: Text(label),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: color,
-          side: BorderSide(
-            color: isDangerous ? color : color.withOpacity(0.3),
-            width: isDangerous ? 1.5 : 1,
+              ),
+            ],
           ),
-          padding: EdgeInsets.symmetric(
-            horizontal: 8.w,
-            vertical: 4.h,
-          ),
-          minimumSize: Size(0, 32.h),
-          visualDensity: VisualDensity.compact,
         ),
       ),
     );

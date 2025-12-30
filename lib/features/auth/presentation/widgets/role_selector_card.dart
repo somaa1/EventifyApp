@@ -76,7 +76,7 @@ class RoleSelectorCard extends StatelessWidget {
               ),
             ),
             if (isSelected)
-              const Icon(
+               Icon(
                 Icons.check_circle,
                 color: AppColors.primary,
               ),
