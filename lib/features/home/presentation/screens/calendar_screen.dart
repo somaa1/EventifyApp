@@ -147,7 +147,7 @@ class CalendarScreen extends StatelessWidget {
     BuildContext context,
   ) {
     return Container(
-      color: Colors.white,
+      color: AppColors.surface,
       child: TableCalendar(
         firstDay: DateTime.utc(2020, 1, 1),
         lastDay: DateTime.utc(2030, 12, 31),
@@ -185,7 +185,7 @@ class CalendarScreen extends StatelessWidget {
             shape: BoxShape.circle,
           ),
           selectedTextStyle: TextStyle(
-            color: Colors.white,
+            color: AppColors.textOnPrimary,
             fontWeight: FontWeight.w600,
             fontSize: 14.sp,
           ),

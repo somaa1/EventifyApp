@@ -53,14 +53,14 @@ class _StatCardState extends State<StatCard> {
           blur: 15,
           opacity: 0.1,
           borderRadius: BorderRadius.circular(16.r),
-          padding: EdgeInsets.all(AppSpacing.lg),
+          padding: EdgeInsets.all(AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Icon with gradient background
               Container(
-                padding: EdgeInsets.all(12.w),
+                padding: EdgeInsets.all(10.w),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -81,25 +81,29 @@ class _StatCardState extends State<StatCard> {
                 ),
                 child: Icon(
                   widget.icon,
-                  size: 28.w,
+                  size: 24.w,
                   color: effectiveIconColor,
                 ),
               ),
-              SizedBox(height: AppSpacing.md),
+              SizedBox(height: AppSpacing.sm),
               // Value with animation
-              Text(
-                widget.value,
-                style: AppTextStyles.headingLarge.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                  fontSize: 28.sp,
+              Flexible(
+                child: Text(
+                  widget.value,
+                  style: AppTextStyles.headingLarge.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                    fontSize: 24.sp,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              SizedBox(height: 4.h),
+              SizedBox(height: 2.h),
               // Title
               Text(
                 widget.title,
-                style: AppTextStyles.bodyMedium.copyWith(
+                style: AppTextStyles.bodySmall.copyWith(
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w500,
                 ),

@@ -113,39 +113,57 @@ class MyEventsScreen extends StatelessWidget {
   }
 
   Widget _buildLoadedState(BuildContext context, MyEventsLoaded state) {
-    return RefreshIndicator(
-      onRefresh: () async {
-        await context.read<MyEventsCubit>().refreshMyEvents();
-      },
-      child: TabBarView(
-        children: [
-          // Upcoming Events Tab
-          state.upcomingEvents.isEmpty
-              ? EmptyEventsState(
-                  message: 'No upcoming events yet',
-                  icon: Icons.event_available_outlined,
-                  actionLabel: 'Browse Events',
-                  onAction: () {
-                    context.push('/events');
-                  },
+    return TabBarView(
+      children: [
+        // Upcoming Events Tab
+        RefreshIndicator(
+          onRefresh: () async {
+            await context.read<MyEventsCubit>().refreshMyEvents();
+          },
+          child: state.upcomingEvents.isEmpty
+              ? SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height - 200.h,
+                    child: EmptyEventsState(
+                      message: 'No upcoming events yet',
+                      icon: Icons.event_available_outlined,
+                      actionLabel: 'Browse Events',
+                      onAction: () {
+                        context.push('/events');
+                      },
+                    ),
+                  ),
                 )
               : _buildEventsList(state.upcomingEvents, false),
+        ),
 
-          // Past Events Tab
-          state.pastEvents.isEmpty
-              ? const EmptyEventsState(
-                  message: 'No past events',
-                  icon: Icons.history_outlined,
+        // Past Events Tab
+        RefreshIndicator(
+          onRefresh: () async {
+            await context.read<MyEventsCubit>().refreshMyEvents();
+          },
+          child: state.pastEvents.isEmpty
+              ? SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height - 200.h,
+                    child: const EmptyEventsState(
+                      message: 'No past events',
+                      icon: Icons.history_outlined,
+                    ),
+                  ),
                 )
               : _buildEventsList(state.pastEvents, true),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildEventsList(List<Event> events, bool isPast) {
     return ListView.builder(
       padding: EdgeInsets.all(AppSpacing.md),
+      physics: const AlwaysScrollableScrollPhysics(),
       itemCount: events.length,
       itemBuilder: (context, index) {
         return MyEventCard(

@@ -30,7 +30,7 @@ class SkeletonStatCard extends StatelessWidget {
               width: 40.w,
               height: 40.h,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.shimmerBase,
                 borderRadius: BorderRadius.circular(8.r),
               ),
             ),
@@ -40,7 +40,7 @@ class SkeletonStatCard extends StatelessWidget {
               width: 60.w,
               height: 32.h,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.shimmerBase,
                 borderRadius: BorderRadius.circular(4.r),
               ),
             ),
@@ -50,7 +50,7 @@ class SkeletonStatCard extends StatelessWidget {
               width: 80.w,
               height: 16.h,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.shimmerBase,
                 borderRadius: BorderRadius.circular(4.r),
               ),
             ),

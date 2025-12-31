@@ -55,7 +55,7 @@ class CalendarEventItem extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: AppSpacing.sm),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
           color: _getEventTypeColor().withOpacity(0.3),

@@ -1,20 +1,20 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../domain/usecases/get_registered_events_usecase.dart';
+import '../../domain/usecases/get_my_events_usecase.dart';
 import 'my_events_state.dart';
 
 class MyEventsCubit extends Cubit<MyEventsState> {
-  final GetRegisteredEventsUseCase _getRegisteredEventsUseCase;
+  final GetMyEventsUseCase _getMyEventsUseCase;
 
   MyEventsCubit({
-    required GetRegisteredEventsUseCase getRegisteredEventsUseCase,
-  })  : _getRegisteredEventsUseCase = getRegisteredEventsUseCase,
+    required GetMyEventsUseCase getMyEventsUseCase,
+  })  : _getMyEventsUseCase = getMyEventsUseCase,
         super(const MyEventsInitial());
 
   Future<void> loadMyEvents() async {
     emit(const MyEventsLoading());
 
     try {
-      final result = await _getRegisteredEventsUseCase();
+      final result = await _getMyEventsUseCase();
 
       result.fold(
         (failure) {

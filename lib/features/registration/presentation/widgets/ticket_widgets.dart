@@ -24,11 +24,11 @@ class TicketCard extends StatelessWidget {
     return Container(
       margin: EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(20.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: AppColors.textPrimary.withAlpha((0.08 * 255).round()),
             blurRadius: 20.r,
             offset: Offset(0, 4.h),
           ),
@@ -73,14 +73,14 @@ class TicketCard extends StatelessWidget {
             children: [
               Icon(
                 Icons.confirmation_number_outlined,
-                color: Colors.white,
+                color: AppColors.textOnPrimary,
                 size: 24.r,
               ),
               SizedBox(width: AppSpacing.sm),
               Text(
                 'Event Ticket',
                 style: AppTextStyles.textTheme.titleMedium!.copyWith(
-                  color: Colors.white,
+                  color: AppColors.textOnPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -90,7 +90,7 @@ class TicketCard extends StatelessWidget {
           Text(
             event.title,
             style: AppTextStyles.textTheme.headlineSmall!.copyWith(
-              color: Colors.white,
+              color: AppColors.textOnPrimary,
               fontWeight: FontWeight.bold,
             ),
           ),

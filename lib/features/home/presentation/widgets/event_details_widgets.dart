@@ -701,13 +701,14 @@ class EventActionButtons extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.settings, size: 22.r, color: Colors.white),
+          Icon(Icons.settings, size: 20.r, color: AppColors.textOnPrimary),
           SizedBox(width: 8.w),
           Text(
             'Manage Event',
-            style: AppTextStyles.bodyLarge.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
+            style: TextStyle(
+              fontSize: 16.sp,
+              color: AppColors.textOnPrimary,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],

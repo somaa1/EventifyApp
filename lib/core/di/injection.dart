@@ -298,7 +298,7 @@ void _registerHomeDependencies() {
 
   getIt.registerFactory(
     () => MyEventsCubit(
-      getRegisteredEventsUseCase: getIt<GetRegisteredEventsUseCase>(),
+      getMyEventsUseCase: getIt<GetMyEventsUseCase>(),
     ),
   );
 

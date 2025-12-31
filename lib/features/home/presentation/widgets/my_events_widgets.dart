@@ -23,7 +23,7 @@ class MyEventCard extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
           color: isPast ? AppColors.divider : AppColors.primary.withOpacity(0.2),
@@ -31,7 +31,7 @@ class MyEventCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: AppColors.textPrimary.withAlpha((0.04 * 255).round()),
             blurRadius: 8.r,
             offset: Offset(0, 2.h),
           ),

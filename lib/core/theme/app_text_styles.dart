@@ -9,7 +9,7 @@ import 'app_colors.dart';
 class AppTextStyles {
   AppTextStyles._();
 
-  static TextTheme textTheme = TextTheme(
+  static TextTheme get textTheme => TextTheme(
     // Display Styles (Extra Large)
     displayLarge: GoogleFonts.poppins(
       fontSize: 32.sp,

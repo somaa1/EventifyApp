@@ -28,7 +28,7 @@ class SkeletonEventCard extends StatelessWidget {
             Container(
               height: 180.h,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.shimmerBase,
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(12.r),
                   topRight: Radius.circular(12.r),
@@ -46,7 +46,7 @@ class SkeletonEventCard extends StatelessWidget {
                     width: 80.w,
                     height: 20.h,
                     decoration: BoxDecoration(
-                      color: Colors.grey[300],
+                      color: AppColors.shimmerBase,
                       borderRadius: BorderRadius.circular(4.r),
                     ),
                   ),
@@ -56,7 +56,7 @@ class SkeletonEventCard extends StatelessWidget {
                     width: double.infinity,
                     height: 24.h,
                     decoration: BoxDecoration(
-                      color: Colors.grey[300],
+                      color: AppColors.shimmerBase,
                       borderRadius: BorderRadius.circular(4.r),
                     ),
                   ),
@@ -65,7 +65,7 @@ class SkeletonEventCard extends StatelessWidget {
                     width: 200.w,
                     height: 24.h,
                     decoration: BoxDecoration(
-                      color: Colors.grey[300],
+                      color: AppColors.shimmerBase,
                       borderRadius: BorderRadius.circular(4.r),
                     ),
                   ),
@@ -75,7 +75,7 @@ class SkeletonEventCard extends StatelessWidget {
                     width: 150.w,
                     height: 16.h,
                     decoration: BoxDecoration(
-                      color: Colors.grey[300],
+                      color: AppColors.shimmerBase,
                       borderRadius: BorderRadius.circular(4.r),
                     ),
                   ),
@@ -85,7 +85,7 @@ class SkeletonEventCard extends StatelessWidget {
                     width: 180.w,
                     height: 16.h,
                     decoration: BoxDecoration(
-                      color: Colors.grey[300],
+                      color: AppColors.shimmerBase,
                       borderRadius: BorderRadius.circular(4.r),
                     ),
                   ),
@@ -98,7 +98,7 @@ class SkeletonEventCard extends StatelessWidget {
                         width: 60.w,
                         height: 16.h,
                         decoration: BoxDecoration(
-                          color: Colors.grey[300],
+                          color: AppColors.shimmerBase,
                           borderRadius: BorderRadius.circular(4.r),
                         ),
                       ),
@@ -106,7 +106,7 @@ class SkeletonEventCard extends StatelessWidget {
                         width: 40.w,
                         height: 20.h,
                         decoration: BoxDecoration(
-                          color: Colors.grey[300],
+                          color: AppColors.shimmerBase,
                           borderRadius: BorderRadius.circular(4.r),
                         ),
                       ),

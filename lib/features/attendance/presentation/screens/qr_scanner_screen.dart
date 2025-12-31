@@ -74,14 +74,14 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
           }
         },
         child: Scaffold(
-          backgroundColor: Colors.black,
+          backgroundColor: const Color(0xFF000000), // Pure black for camera overlay
           appBar: AppBar(
-            backgroundColor: Colors.black,
+            backgroundColor: const Color(0xFF000000),
             elevation: 0,
-            iconTheme: const IconThemeData(color: Colors.white),
+            iconTheme: IconThemeData(color: AppColors.textOnPrimary),
             title: Text(
               'Scan Ticket',
-              style: AppTextStyles.headingSmall.copyWith(color: Colors.white),
+              style: AppTextStyles.headingSmall.copyWith(color: AppColors.textOnPrimary),
             ),
           ),
           body: Stack(
@@ -111,7 +111,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                         final isOn = state.torchState == TorchState.on;
                         return Icon(
                           isOn ? Icons.flash_on : Icons.flash_off,
-                          color: isOn ? AppColors.warning : Colors.white,
+                          color: isOn ? AppColors.warning : AppColors.textOnPrimary,
                           size: 28.w,
                         );
                       }),

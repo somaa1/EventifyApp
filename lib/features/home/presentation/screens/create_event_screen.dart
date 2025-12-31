@@ -188,49 +188,57 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   ),
                   SizedBox(height: AppSpacing.md),
                   // Visibility Dropdown
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16.r),
-                      boxShadow: AppShadows.small(AppColors.isDarkMode),
-                    ),
-                    child: GlassContainer(
-                      blur: 15,
-                      opacity: 0.1,
-                      borderRadius: BorderRadius.circular(16.r),
-                      padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                      child: DropdownButtonFormField<String>(
-                        value: _eventType,
-                        items: [
-                          DropdownMenuItem(
-                            value: 'PUBLIC',
-                            child: Row(
-                              children: [
-                                Icon(Icons.public, size: 20.r, color: AppColors.primary),
-                                SizedBox(width: 8.w),
-                                const Text('Public'),
-                              ],
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: 'PRIVATE',
-                            child: Row(
-                              children: [
-                                Icon(Icons.lock, size: 20.r, color: AppColors.secondary),
-                                SizedBox(width: 8.w),
-                                const Text('Private'),
-                              ],
-                            ),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() => _eventType = value);
-                          }
-                        },
-                        decoration: InputDecoration(
-                          labelText: 'Event Visibility',
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+                  DropdownButtonFormField<String>(
+                    value: _eventType,
+                    items: [
+                      DropdownMenuItem(
+                        value: 'PUBLIC',
+                        child: Text('Public', style: AppTextStyles.bodyMedium),
+                      ),
+                      DropdownMenuItem(
+                        value: 'PRIVATE',
+                        child: Text('Private', style: AppTextStyles.bodyMedium),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => _eventType = value);
+                      }
+                    },
+                    icon: Icon(Icons.arrow_drop_down, color: AppColors.primary),
+                    dropdownColor: AppColors.surface,
+                    style: AppTextStyles.bodyMedium,
+                    decoration: InputDecoration(
+                      labelText: 'Event Visibility',
+                      prefixIcon: Icon(
+                        _eventType == 'PUBLIC' ? Icons.public : Icons.lock,
+                        color: _eventType == 'PUBLIC' ? AppColors.primary : AppColors.secondary,
+                      ),
+                      filled: true,
+                      fillColor: AppColors.surfaceVariant.withOpacity(0.5),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.md,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                        borderSide: BorderSide(
+                          color: AppColors.border,
+                          width: 1.w,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                        borderSide: BorderSide(
+                          color: AppColors.border,
+                          width: 1.w,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                        borderSide: BorderSide(
+                          color: AppColors.primary,
+                          width: 2.w,
                         ),
                       ),
                     ),
@@ -267,13 +275,13 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.add_circle_outline, size: 22.r, color: Colors.white),
+                            Icon(Icons.add_circle_outline, size: 20.r, color: AppColors.textOnPrimary),
                             SizedBox(width: 8.w),
                             Text(
                               'Create Event',
                               style: AppTextStyles.bodyLarge.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
+                                color: AppColors.textOnPrimary,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
